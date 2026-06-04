@@ -47,3 +47,13 @@ typedef struct equipe{
 	Chamado *listaChamados;
 	struct equipe *prox;
 }Equipe; //Equipes só podem atender chamados compatíveis com sua especialidade
+
+
+void carregarBairros(Bairro **listaBairros);
+void carregarChamados(Chamado **listaChamados);
+void carregarEquipes(Equipe **listaEquipes);
+void carregarOcorrencias(Ocorrencia **listaOcorrencia);
+void carregarSensores(Sensores **listaSensores);
+
+void inserirEquipe(Equipe **listaEquipes, int codEquipe, char *nomeEquipe, int espec);
+Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe);

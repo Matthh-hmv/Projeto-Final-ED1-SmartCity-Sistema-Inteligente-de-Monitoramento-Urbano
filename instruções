@@ -47,14 +47,4 @@
 	Tipo recomendado: Lista Encadeada Simples
 	Como fazer: Cada equipe possui um ponteiro Chamado *listaChamados;. Quando um chamado é gerado automaticamente (seja por um sensor ficar offline ou uma ocorrência ser crítica) , você identifica uma equipe com a especialidade compatível e insere o nó do Chamado na lista de chamados daquela equipe específica.  
 
-	Nota de relacionamento: O chamado não duplica a ocorrência na memória; o campo Ocorrencia *ocorrencia; dentro de chamado deve ser apenas um ponteiro apontando para a ocorrência real que já está guardada lá dentro do sensor.  
-
-	💡 Dica de Ouro de Estrutura de Dados para as Funções de Inserção:Para fazer essas inserções em sub-listas sem que o código vire uma confusão de ponteiros, estruture suas funções recebendo o ponteiro da lista e retornando o início atualizado:
-	
-	Bairro* inserir_bairro(Bairro* lista, ...)
-	Sensor* inserir_sensor_no_bairro(Sensor* lista_do_bairro, ...)
-	Ocorrencia* inserir_ocorrencia_no_sensor(Ocorrencia* lista_do_sensor, ...)
-
-	Dessa forma, quando for inserir um sensor, você localiza o bairro e faz simplesmente:bairro_encontrado->listaSensores = inserir_sensor_no_bairro(bairro_encontrado->listaSensores, ...);
-
-	Isso mantém o encapsulamento perfeito, respeita a proibição de variáveis globais e atende perfeitamente à exigência de relacionamentos e listas de listas usando ponteiros dinâmicos!  
+	Nota de relacionamento: O chamado não duplica a ocorrência na memória; o campo Ocorrencia *ocorrencia; dentro de chamado deve ser apenas um ponteiro apontando para a ocorrência real que já está guardada lá dentro do sensor.    

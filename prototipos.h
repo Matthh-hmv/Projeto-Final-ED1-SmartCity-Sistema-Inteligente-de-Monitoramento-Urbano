@@ -50,10 +50,12 @@ typedef struct equipe{
 
 
 void carregarBairros(Bairro **listaBairros);
-void carregarChamados(Chamado **listaChamados);
+void carregarChamados(Bairro *listaBairros, Equipe *listaEquipes);
 void carregarEquipes(Equipe **listaEquipes);
-void carregarOcorrencias(Ocorrencia **listaOcorrencia);
-void carregarSensores(Sensores **listaSensores);
+void carregarOcorrencias(Bairro *listaBairros);
+void carregarSensores(Bairro *listaBairros);
 
 void inserirEquipe(Equipe **listaEquipes, int codEquipe, char *nomeEquipe, int espec);
 Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe);
+
+#endif

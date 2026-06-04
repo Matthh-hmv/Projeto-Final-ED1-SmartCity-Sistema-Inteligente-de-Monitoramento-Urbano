@@ -1,0 +1,11 @@
+//1 Nomeação de funções e variáveis
+	Variáveis:
+		Nomear como Camel Case ex.: listaEquipe, listaSensores, carregarArquivo, etc;
+	Funções: 
+		Nomear como conforme as palavras chaves.;
+	Biblioteca:
+		Fazer um arquivo separado para a biblioteca, apenas para colocar as funções
+
+//2 Sepração de funções
+	Matheus: Cadastro de Bairros, Cadastro de Sensores e Registro de Ocorrências
+	Kamilla: Geração de chamados, Gerenciamento de Equipes e Carregar Dados

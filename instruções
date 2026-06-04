@@ -2,10 +2,59 @@
 	Variáveis:
 		Nomear como Camel Case ex.: listaEquipe, listaSensores, carregarArquivo, etc;
 	Funções: 
-		Nomear como conforme as palavras chaves.;
+		Nomear como conforme as palavras chaves;
+
 	Biblioteca:
 		Fazer um arquivo separado para a biblioteca, apenas para colocar as funções
 
 //2 Sepração de funções
 	Matheus: Cadastro de Bairros, Cadastro de Sensores e Registro de Ocorrências
 	Kamilla: Geração de chamados, Gerenciamento de Equipes e Carregar Dados
+
+	1. Lista de Bairros (A Lista Principal)
+	
+	Tipo recomendado: Lista Encadeada Simples Ponteiro Simples na main
+	
+	Como fazer: É a lista "raiz" do seu sistema urbano. No escopo global ou dentro da função main, você cria um ponteiro do tipo Bairro* listaBairros = NULL;. Conforme você lê o arquivo bairros.txt, novos nós do tipo Bairro vão sendo alocados e inseridos nela.  
+
+	2. Lista de Sensores dentro de cada Bairro
+
+	Tipo recomendado: Lista Encadeada Simples (Lista de Sub-Nós)
+
+	Como fazer: O campo Sensor *listaSensores; fica localizado dentro de cada nó de Bairro.
+
+	O fluxo de cadastro: Quando o programa lê um sensor no arquivo sensores.txt (ex: Sensor 101 no Bairro 1):  
+
+	Primeiro, você faz uma busca na lista principal de Bairros para encontrar o nó do Bairro 1.  Ao encontrar esse nó do bairro, você acessa o ponteiro bairro->listaSensores.  Você insere o novo nó do Sensor diretamente nessa sub-lista daquele bairro específico.  
+
+	3. Lista de Ocorrências dentro de cada Sensor
+
+	Tipo recomendado: Lista Encadeada Simples (Lista de Sub-Nós de 2º Nível)
+
+	Como fazer: O campo Ocorrencia *listaOcorrencias; fica localizado dentro de cada nó de Sensor.  
+
+	O fluxo de cadastro: Quando o arquivo ocorrencias.txt ou uma simulação disparar uma ocorrência vinculada ao Sensor 102:  
+	Você percorre os bairros e os sensores até achar o nó do Sensor 102.  
+	Ao encontrá-lo, acessa o ponteiro sensor->listaOcorrencias.  
+	Insere o nó da Ocorrencia diretamente na sub-lista deste sensor.  
+
+	4. Lista de Equipes Técnicas (Independente)
+
+	Tipo recomendado: Lista Encadeada Simples
+	Como fazer: Assim como os bairros, as equipes não pertencem a um local geográfico inicial. Você cria um ponteiro principal Equipe* listaEquipes = NULL; na main ou no controlador de simulação. Ao ler equipes.txt, as equipes são inseridas nessa lista linear.  
+
+	5. Lista de Chamados Técnicos (Lista de Vínculos)
+	Tipo recomendado: Lista Encadeada Simples
+	Como fazer: Cada equipe possui um ponteiro Chamado *listaChamados;. Quando um chamado é gerado automaticamente (seja por um sensor ficar offline ou uma ocorrência ser crítica) , você identifica uma equipe com a especialidade compatível e insere o nó do Chamado na lista de chamados daquela equipe específica.  
+
+	Nota de relacionamento: O chamado não duplica a ocorrência na memória; o campo Ocorrencia *ocorrencia; dentro de chamado deve ser apenas um ponteiro apontando para a ocorrência real que já está guardada lá dentro do sensor.  
+
+	💡 Dica de Ouro de Estrutura de Dados para as Funções de Inserção:Para fazer essas inserções em sub-listas sem que o código vire uma confusão de ponteiros, estruture suas funções recebendo o ponteiro da lista e retornando o início atualizado:
+	
+	Bairro* inserir_bairro(Bairro* lista, ...)
+	Sensor* inserir_sensor_no_bairro(Sensor* lista_do_bairro, ...)
+	Ocorrencia* inserir_ocorrencia_no_sensor(Ocorrencia* lista_do_sensor, ...)
+
+	Dessa forma, quando for inserir um sensor, você localiza o bairro e faz simplesmente:bairro_encontrado->listaSensores = inserir_sensor_no_bairro(bairro_encontrado->listaSensores, ...);
+
+	Isso mantém o encapsulamento perfeito, respeita a proibição de variáveis globais e atende perfeitamente à exigência de relacionamentos e listas de listas usando ponteiros dinâmicos!  

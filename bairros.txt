@@ -1,0 +1,8 @@
+1 Centro
+2 Oficinas
+3 Uvaranas
+4 Neves
+5 Jardim_Carvalho
+6 Boa_Vista
+7 Chapada
+8 Ronda

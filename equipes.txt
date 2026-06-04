@@ -1,0 +1,6 @@
+1 Equipe_Norte 1
+2 Equipe_Sul 2
+3 Equipe_Central 3
+4 Equipe_Leste 4
+5 Equipe_Oeste 5
+6 Equipe_Extra 2

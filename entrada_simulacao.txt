@@ -1,0 +1,27 @@
+cadastrarBairro 9 Santa_Marta
+
+cadastrarSensor 200 2 1 9
+cadastrarSensor 201 5 1 9
+
+cadastrarEquipe 20 Equipe_Apoio 5
+
+registrarOcorrencia 9001 4 1 200 9 Enchente_detectada
+registrarOcorrencia 9002 4 1 201 9 Falha_iluminacao
+
+gerarChamado 8001 9001 4 1
+gerarChamado 8002 9002 4 1
+
+associarEquipe 8001 6
+associarEquipe 8002 20
+
+alterarStatusSensor 200 9 3
+alterarStatusSensor 201 9 2
+
+listarSensoresBairro 9
+listarOcorrencias
+
+finalizarChamado 8001
+
+relatorioGeral
+
+FIM

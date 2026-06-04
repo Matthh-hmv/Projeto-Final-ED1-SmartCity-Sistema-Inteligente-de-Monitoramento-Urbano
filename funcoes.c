@@ -1,9 +1,8 @@
 #include "prototipos.h"
 
-// CARREGAR DADOS DOS AQUIVOS txt
+//CARREGAR ARQUIVSO txt:
 void carregarBairros(Bairro **listaBairros)
 {
-	//BAIRROS
 	FILE *arquivoBairros = fopen("entradas/bairros.txt", "r");
 
 	if(!arquivoBairros)
@@ -22,7 +21,7 @@ void carregarBairros(Bairro **listaBairros)
 }
 
 
-void carregarChamados(Chamado **listaChamados)
+void carregarChamados(Bairro *listaBairros, Equipe *listaEquipes)
 {
 	FILE *arquivoChamados = fopen("entradas/chamados.txt", "r");
 
@@ -35,7 +34,7 @@ void carregarChamados(Chamado **listaChamados)
 	int codChamado, codOcorrencia, codEquipe, prioridade, statusSensor;
 
 	while(fscanf(arquivoChamados, "%d %d %d %d %d", &codChamado, &codOcorrencia, &codEquipe, &prioridade, &statusSensor) == 5)
-		inserirChamados();
+		inserirChamadoEquipe(listaEquipes, codEquipe, codChamado, prioridade, statusSensor, NULL);
 
 	fclose(arquivoChamados);
 }
@@ -56,7 +55,7 @@ void carregarEquipes(Equipe **listaEquipes)
 
 
 	while(fscanf(arquivoEquipes, "%d %s %d", &cod, nomeEquipe, &especialidade) == 3)
-		inserirEquipes(listaEquipes, cod, nomeEquipe, especialidade);
+		inserirEquipe(listaEquipes, cod, nomeEquipe, especialidade);
 
 	fclose(arquivoEquipes);
 }
@@ -82,7 +81,7 @@ void carregarOcorrencias(Ocorrencia **listaOcorrencia)
 }
 
 
-void carregarSensores(Sensores **listaSensores)
+void carregarSensores(Bairro *listaBairros)
 {
 	FILE *arquivoSensores = fopen("entradas/sensores.txt", "r");
 
@@ -101,7 +100,7 @@ void carregarSensores(Sensores **listaSensores)
 }
 
 
-// GERENCIAR EQUIPES
+// GERENCIAR EQUIPES:
 void inserirEquipe(Equipe **listaEquipes, int codEquipe, char *nomeEquipe, int espec)
 {
 	Equipe *novo = NULL;

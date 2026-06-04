@@ -1,4 +1,4 @@
-#include "../include/prototipos.h"
+#include "prototipos.h"
 
 // CARREGAR DADOS DOS AQUIVOS txt
 void carregarBairros(Bairro **listaBairros)

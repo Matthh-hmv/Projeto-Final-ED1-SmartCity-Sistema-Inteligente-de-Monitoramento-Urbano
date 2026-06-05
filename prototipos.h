@@ -62,6 +62,8 @@ void carregarSensores(Bairro *listaBairros);
 //Equipe
 void inserirEquipe(Equipe **listaEquipes, int codEquipe, char *nomeEquipe, int espec);
 Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe);
+void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, int codChamado, int priori, int statusSensor, Ocorrencia *OcorrenciaReal);
+void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe);
 
 //Bairro
 Bairro * alocaBairro(int codigo, char nome[]);

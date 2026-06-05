@@ -70,6 +70,7 @@ void buscaBairro(Bairro *pauxBairro, int codBairro);
 void listaBairro(Bairro *pauxBairro);
 void removeBairroCodigo(Bairro **listaBairro, int codBairro);//apagar os sensores (nao fiz o comando do sensor ainda)
 void removeBairroInicio(Bairro **listaBairro); //Terminar
+Bairro *verificaBairro(Bairro *pauxBairro, int codBairro);
 
 //Sensores
 Sensor * alocaSensor(int codigo, int tipo,  int status);

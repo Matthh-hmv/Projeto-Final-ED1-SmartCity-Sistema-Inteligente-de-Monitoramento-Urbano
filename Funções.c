@@ -465,10 +465,53 @@ void insereSensor(Bairro *enderecoBairro, int codBairro, int codSensor, int tipo
 
 void removeSensorCodigo(Bairro *enderecoBairro, int codSensor)//Acha o endereco do bairro na main
 {
+	Sensor *pauxSensor = enderecoBairro->listaSensores;
+	if (pauxSensor == NULL)
+	{
+		printf("\nLista de sensores desse bairro está vazia!");
+		return;
+	}
+	Sensor *enderecoSensor = verificaSensor(pauxSensor, codSensor);
+	if (enderecoSensor == NULL)
+	{
+		printf("\nNão existe sensor com esse codigo nesse bairro");
+		return;
+	}
+	if (pauxSensor == enderecoSensor)
+	{
+		enderecoBairro -> listaSensores = enderecoSensor -> prox;
+		while(enderecoSensor -> listaOcorrencias)
+			removeOcorrenciaInicio(enderecoBairro, &(enderecoSensor -> listaOcorrencias));
+		free(enderecoSensor);
+		return;
+	}//Remocao se o sensor for o primeiro
+
+	while(pauxSensor -> prox != NULL)
+	{
+		if ((pauxSensor -> prox) == enderecoSensor)
+		{
+			pauxSensor -> prox = enderecoSensor -> prox;
+			while(enderecoSensor -> listaOcorrencias)
+				removeOcorrenciaInicio(enderecoBairro, &(enderecoSensor -> listaOcorrencias));
+			free(enderecoSensor);
+			return;
+		}	
+		pauxSensor = pauxSensor -> prox;
+	}
+
 }
 
+Sensor * verificaSensor (Sensor *pauxSensor, int codSensor)
+{
+	while (pauxSensor != NULL) //Percorre os bairros
+	{
+		if (pauxSensor->codigo == codSensor)
+			return pauxSensor;
+		pauxSensor = pauxSensor->prox;	
+	}
+	return NULL;
 
-
+}
 
 //Funções Ocorrências
 

@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include<ctype.h> //tolower()
 
 #ifndef PROTOTIPOS_H
 #define PROTOTIPOS_H
@@ -26,7 +27,7 @@ typedef struct bairro{
 	int codigo;
 	char nome[50];
 	int quantidadeOcorrencias; //Ajuda a fazer o relatorio 1; ++
-	int totalPorSeveridade[3]; //Armazenar a quantidade de ocorrencias por severidade, relatorio 6 (Sera se a simone deixa); ++
+	int totalPorSeveridade[3]; //Armazenar a quantidade de ocorrencias por severidade por bairro, relatorio 6; ++
 	int quantidaSensores; //Ajuda a fazer o relatorio 5; ++
 	Sensor *listaSensores;
 	struct bairro *prox;
@@ -56,10 +57,28 @@ void carregarEquipes(Equipe **listaEquipes);
 void carregarOcorrencias(Bairro *listaBairros);
 void carregarSensores(Bairro *listaBairros);
 
-
-
 //Equipe
 void inserirEquipe(Equipe **listaEquipes, int codEquipe, char *nomeEquipe, int espec);
 Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe);
+
+//Bairro
+Bairro * alocaBairro(int codigo, char nome[]);
+void insereBairro(Bairro **listaBairro, int codigo, char nome[]);
+void buscaBairro(Bairro *pauxBairro, int codBairro);
+void listaBairro(Bairro *pauxBairro);
+void removeBairroCodigo(Bairro **listaBairro, int codBairro);//apagar os sensores (nao fiz o comando do sensor ainda)
+void removeBairroInicio(Bairro **listaBairro); //Terminar
+
+//Sensores
+Sensor * alocaSensor(int codigo, int tipo,  int status);
+void insereSensor(Bairro *pauxBairro, int codBairro, int codSensor, int tipo,  int status);
+//void removeSensorCodigo(Bairro *enderecoBairro, int codSensor);//terminar
+
+//Ocorrências
+Ocorrencia * alocaOcorrencia(int codigo, int severidade, char descricao[], int status);
+void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codigo, int severidade, char descricao[], int status);
+void removeOcorrenciaCodigo(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codOcorrencia);
+void removeOcorrenciaInicio(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia);
+Ocorrencia * verificaOcorrencia(Ocorrencia *pauxOcorrencia, int codOcorrencia);
 
 #endif

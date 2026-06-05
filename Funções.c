@@ -95,15 +95,30 @@ void carregarOcorrencias(Bairro *listaBairros)
 	while(fscanf(arquivoOcorrencias, "%d %d %d %d %d %s", &codOcorrencia, &sev, &statusSensor, &codSensor, &bairro, desc) == 6)
 	{
 		Bairro *bairroDestino = verificaBairro(listaBairros, bairro);
+
 		if(bairroDestino != NULL)
 		{
-			Sensor *pauxSensor = bairroDestino->listaSensores;
+			Sensor *pauxSensor = verificaSensor(bairroDestino->listaSensores, codSensor); //busca o sensor no bairro informado
 
-			while(pauxSensor != NULL && pauxSensor->codigo != codSensor)
-				pauxSensor = pauxSensor->prox;
-
-			if(pauxSensor != NULL)
+			if(pauxSensor != NULL)  
 				insereOcorrencia(bairroDestino, &(pauxSensor->listaOcorrencias), codOcorrencia, sev, desc, statusSensor);
+
+
+
+			if(pauxSensor == NULL)  // nao achou no bairro informado, procura em outro bairro
+			{
+				Bairro *pauxBairro = listaBairros;
+
+				while(pauxBairro != NULL && pauxSensor == NULL)
+				{
+					pauxSensor = verificaSensor(pauxBairro->listaSensores, codSensor);
+
+					if(pauxSensor != NULL)  // achou em outro bairro, atualiza o bairro de destino para o certo
+						bairroDestino = pauxBairro;
+
+					pauxBairro = pauxBairro->prox;
+				}
+			}
 		}
 	}
 
@@ -126,6 +141,7 @@ void carregarSensores(Bairro *listaBairros)
 	while(fscanf(arquivoSensores, "%d %d %d %d", &codSensor, &tipoSensor, &statusSensor, &codBairro) == 4)
 	{
 		Bairro *bairroDestino = verificaBairro(listaBairros, codBairro);
+
 		if(bairroDestino != NULL)
 			insereSensor(bairroDestino, codBairro, codSensor, tipoSensor, statusSensor);
 	}
@@ -181,6 +197,7 @@ Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe)
 	}
 	return NULL;
 }
+
 
 void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, int codChamado, int priori, int statusSensor, Ocorrencia *OcorrenciaReal)
 {
@@ -302,6 +319,116 @@ void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe)
 
 	printf("Chamado %d associado com sucesso a equipe %s \n", codChamado, equipeDestino->nome);
 }
+
+
+void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, int codOcorrencia, int priori, int statusSensor)
+{
+	Ocorrencia *OcorrenciaReal = NULL;	
+	int tipoSensor = -1;
+
+	Bairro *pauxBairro = listaBairros;
+
+
+	while(pauxBairro != NULL && OcorrenciaReal == NULL)
+	{
+		Sensor *pauxSensor = pauxBairro->listaSensores;
+
+		while(pauxSensor != NULL && OcorrenciaReal == NULL)
+		{
+			OcorrenciaReal = verificaOcorrencia(pauxSensor->listaOcorrencias, codOcorrencia);
+			
+			if(OcorrenciaReal != NULL)
+			{
+				tipoSensor = pauxSensor->tipo;
+				break;
+			}
+
+			pauxSensor = pauxSensor->prox;
+		}
+		pauxBairro = pauxBairro->prox;
+	}
+
+
+	if(OcorrenciaReal == NULL)
+	{
+		printf("Ocorrencia %d nao encontrada. Chamado %d cancelado \n", codOcorrencia, codChamado);
+		return;
+	}
+
+	Equipe *equipeCompativel = listaEquipes;
+
+
+	while(equipeCompativel != NULL)
+	{
+		if(equipeCompativel->especialidade == tipoSensor)
+			break;
+
+		equipeCompativel = equipeCompativel->prox;
+	}
+
+	if(equipeCompativel == NULL)
+	{
+		printf("Nenhuma equipe com especialidade %d cadastrada para atender o chamado %d\n", tipoSensor, codChamado);
+		return;
+	}
+
+	inserirChamadoEquipe(listaEquipes, equipeCompativel->codigo, codChamado, priori, statusSensor, OcorrenciaReal);
+	
+	Chamado *pauxChamado = equipeCompativel->listaChamados;
+
+	while(pauxChamado->prox != NULL)
+		pauxChamado = pauxChamado->prox;
+
+	OcorrenciaReal->chamado = pauxChamado;
+
+	printf("Chamado %d gerado automaticamente e atribuido a equipe %s \n", codChamado, equipeCompativel->nome);
+}
+
+
+
+void finalizarChamado(Equipe *listaEquipes, int codChamado)
+{
+	Equipe *equipeAtual = listaEquipes;
+	Chamado *chamadoAlvo = NULL;
+	Equipe *equipeResponsavel = NULL;
+
+	while(equipeAtual != NULL)
+	{
+		Chamado *pauxChamado = equipeAtual->listaChamados;
+
+		while(pauxChamado != NULL)
+		{
+			if(pauxChamado->codigo == codChamado)
+			{
+				chamadoAlvo = pauxChamado;
+				equipeResponsavel = equipeAtual;
+				break;
+			}
+
+			pauxChamado = pauxChamado->prox;
+		}
+
+		if(chamadoAlvo)
+			break;
+
+		equipeAtual = equipeAtual->prox;
+	}
+
+	if(chamadoAlvo == NULL)
+	{
+		printf("Chamado %d nao encontrado no sistema \n", codChamado);
+		return;
+	}
+
+	chamadoAlvo->status = 3; // 3 = chamado finalizado
+	equipeResponsavel->totalAtendimentos++;
+
+	if(chamadoAlvo->ocorrencia != NULL)
+		chamadoAlvo->ocorrencia->status = 0; //ocorrencia resovlida
+
+	printf("Chamado %d finalizado com sucesso pela equipe %s \n", codChamado, equipeResponsavel->nome);
+}
+
 
 //MATHEUS
 

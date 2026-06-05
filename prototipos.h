@@ -6,6 +6,8 @@
 #ifndef PROTOTIPOS_H
 #define PROTOTIPOS_H
 
+typedef struct chamado Chamado; //tem que declarar aqui no começo, porque a struct ocorrencia chama a struct chamado mas ela ainda "nao existe" porque foi criada depois
+
 typedef struct ocorrencia{
 	int codigo;
 	int severidade;

@@ -65,6 +65,10 @@ Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe);
 void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, int codChamado, int priori, int statusSensor, Ocorrencia *OcorrenciaReal);
 void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe);
 
+//Chamado
+void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, int codOcorrencia, int priori, int statusSensor);
+void finalizarChamado(Equipe *listaEquipes, int codChamado);
+
 //Bairro
 Bairro * alocaBairro(int codigo, char nome[]);
 void insereBairro(Bairro **listaBairro, int codigo, char nome[]);

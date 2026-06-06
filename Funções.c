@@ -1,6 +1,7 @@
 #include "prototipos.h"
 
 //CARREGAR ARQUIVSO txt:
+
 void carregarBairros(Bairro **listaBairros)
 {
 	FILE *arquivoBairros = fopen("entradas/bairros.txt", "r");
@@ -323,8 +324,35 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 }
 
 
+Chamado *verificaChamado(Equipe *listaEquipes, int codChamado)
+{
+	Equipe *equipeAtual = listaEquipes;
+
+	while(equipeAtual != NULL)
+	{
+		Chamado *pauxChamado = equipeAtual->listaChamados;
+
+		while(pauxChamado != NULL)
+		{
+			if(pauxChamado->codigo == codChamado)
+				return pauxChamado;  //enconrou chamado na memoria
+
+			pauxChamado = pauxChamado->prox;
+		}
+		equipeAtual = equipeAtual->prox;
+	}
+	return NULL; // nao existe no sistema
+}
+
+
 void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, int codOcorrencia, int priori, int statusSensor)
 {
+	if(verificaChamado(listaEquipes, codChamado) != NULL)
+	{
+		printf("O chamado %d ja esta cadastrado no sistema. \n", codChamado);
+		return;
+	}
+
 	Ocorrencia *OcorrenciaReal = NULL;	
 	int tipoSensor = -1;
 
@@ -382,30 +410,28 @@ void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, in
 }
 
 
-Chamado *verificaChamado(Equipe *listaEquipes, int codChamado)
+void finalizarChamado(Equipe *listaEquipes, int codChamado)
 {
 	Equipe *equipeAtual = listaEquipes;
+	Chamado *chamadoAlvo = NULL;
+	Equipe *equipeResponsavel = NULL;
 
-	while(equipeAtual != NULL)
+	while(equipeAtual != NULL && chamadoAlvo == NULL)
 	{
 		Chamado *pauxChamado = equipeAtual->listaChamados;
 
 		while(pauxChamado != NULL)
 		{
 			if(pauxChamado->codigo == codChamado)
-				return pauxChamado;  //enconrou chamado na memoria
-
+			{
+				chamadoAlvo = pauxChamado;
+				equipeResponsavel = equipeAtual;
+				break;
+			}
 			pauxChamado = pauxChamado->prox;
 		}
 		equipeAtual = equipeAtual->prox;
 	}
-	return NULL; // nao existe no sistema
-}
-
-
-void finalizarChamado(Equipe *listaEquipes, int codChamado)
-{
-	Chamado *chamadoAlvo = verificaChamado(listaEquipes, codChamado);
 
 	if(chamadoAlvo == NULL)
 	{
@@ -414,6 +440,7 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado)
 	}
 
 	chamadoAlvo->status = 3; // 3 = chamado finalizado
+	equipeResponsavel->totalAtendimentos++;
 
 	if(chamadoAlvo->ocorrencia != NULL)
 		chamadoAlvo->ocorrencia->status = 0; //ocorrencia resovlida

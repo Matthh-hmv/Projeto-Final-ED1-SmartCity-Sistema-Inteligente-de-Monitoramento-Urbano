@@ -1,46 +1,46 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
+#include "prototipos.h"
 
-typedef struct ocorrencia{
-	int codigo;
-	int severidade;
-	char descricao[100];
-	int status;
-	int totalPorSeveridade[3]; //Armazenar a quantidade de ocorrencias por severidade, relatorio 6 (Sera se a simone deixa); ++
-	struct ocorrencia *prox;
-}Ocorrencia;
+void main()
+{
+	Bairro *listaBairros = NULL;
+	Equipe *listaEquipe = NULL;
+	int escMenu, escEntradaManual;
+	printf("Bem vindo ao sistema de controle de SmartCity's\n");
+	do {
+		printf("\n1 - Carregar arquivos\n2 - Entrada manual de Dados\n3 - Simulação via arquivo de entrada\n0 - Sair do programa");
+		scanf("%d", &escMenu);
+		switch(escMenu)
+		{
+			case 1:
+			{
+				/*Aqui vai ser onde o sistema vai carregar os arquivos que guardam as informações, pensar na possibilidade de 
+				fazer escolhas para o que carregar ou se vamos carregar todos os arquivos de uma vez*/
+				break;
+			}	
+			case 2:
+			{
+				printf("\n1 - Inserir bairro, 2 - Buscar bairro, 3 - Listar todos os bairros, 4 - Remover um Bairro pro código ");
+				//Funções dos sensores
+				//Funções das ocorrencias
+				//Funções das equipes
+				//Funções dos chamados
+			}
+			case 3:
+			{
+				//Aqui onde ele vai ler o arquivo entrada_simulacao.txt e realizar as ações
+			}
+			case 0:
+			{
+				//Desaloca todos os ponteiros, a parte de salvamento é dentro das funções
+			}
+			default:
+			{
+				printf("\nDigite uma opção válida!");
+				break;
+			}
 
-typedef struct sensor{
-	int codigo;
-	char tipo[30];
-	int status;
-	Ocorrencia *listaOcorrencias;
-	struct sensor *prox;
-}Sensor;
+		}
 
-typedef struct bairro{
-	int codigo;
-	char nome[50];
-	int quantidadeOcorrencias; //Ajuda a fazer o relatorio 1; ++
-	int quantidadeSensores; //Ajuda a fazer o relatorio 5; ++
-	Sensor *listaSensores;
-	struct bairro *prox;
-}Bairro;
+	}while (esc_menu != 0) e 
 
-typedef struct chamado{
-	int codigo;
-	int prioridade;
-	int status;
-	Ocorrencia *ocorrencia; //verifique se vai precisar
-	struct chamado *prox;
-}Chamado;
-
-typedef struct equipe{
-	int codigo;
-	char nome[50];
-	char especialidade[30];
-	int totalAtendimentos; //Ajuda a fazer o relatorio 6;
-	Chamado *listaChamados;
-	struct equipe *prox;
-}Equipe; //Equipes só podem atender chamados compatíveis com sua especialidade
+}

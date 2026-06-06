@@ -58,6 +58,9 @@ void carregarEquipes(Equipe **listaEquipes);
 void carregarOcorrencias(Bairro *listaBairros);
 void carregarSensores(Bairro *listaBairros);
 
+void salvaSistema(Bairro *listaBairros, Equipe *listaEquipes); //melhor que fazer em cada funcao de inserir, usa na main toda vez que chamar uma funcao
+void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes);
+
 //Equipe
 Equipe *alocaEquipe(int codEquipe, char *nomeEquipe, int espec);
 void inserirEquipe(Equipe **listaEquipes, Equipe *novaEquipe);
@@ -70,6 +73,7 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 Chamado *verificaChamado(Equipe *listaEquipes, int codChamado);
 void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, int codOcorrencia, int priori, int statusSensor);
 void finalizarChamado(Equipe *listaEquipes, int codChamado);
+
 
 //Bairro
 Bairro * alocaBairro(int codigo, char nome[]);

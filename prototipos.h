@@ -68,8 +68,8 @@ void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe);
 //Chamado
 Chamado *alocaChamado(int cod, int priori, int statusChamado, Ocorrencia *OcorrenciaReal);
 void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoChamado);
-void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, int codOcorrencia, int priori, int statusSensor);
 Chamado *verificaChamado(Equipe *listaEquipes, int codChamado);
+void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, int codOcorrencia, int priori, int statusSensor);
 void finalizarChamado(Equipe *listaEquipes, int codChamado);
 
 //Bairro

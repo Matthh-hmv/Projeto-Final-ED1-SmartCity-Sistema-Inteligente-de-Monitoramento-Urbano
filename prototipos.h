@@ -1,13 +1,12 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-#include<ctype.h> //tolower()
 
 #ifndef PROTOTIPOS_H
 #define PROTOTIPOS_H
 
 typedef struct chamado Chamado; //tem que declarar aqui no começo, porque a struct ocorrencia chama a struct chamado mas ela ainda "nao existe" porque foi criada depois
-
+	
 typedef struct ocorrencia{
 	int codigo;
 	int severidade;
@@ -75,16 +74,18 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado);
 //Bairro
 Bairro * alocaBairro(int codigo, char nome[]);
 void insereBairro(Bairro **listaBairro, int codigo, char nome[]);
-void buscaBairro(Bairro *pauxBairro, int codBairro);
+void buscaBairro(Bairro *pauxBairro, int codBairro); //Talvez redundante, ver a adaptação na main com o verificaBairro
 void listaBairro(Bairro *pauxBairro);
 void removeBairroCodigo(Bairro **listaBairro, int codBairro);//apagar os sensores (nao fiz o comando do sensor ainda)
-void removeBairroInicio(Bairro **listaBairro); //Terminar
-Bairro *verificaBairro(Bairro *pauxBairro, int codBairro);
+void removeBairroInicio(Bairro **listaBairro); //Terminar, usar para a desolacação de memória
+Bairro * verificaBairro(Bairro *pauxBairro, int codBairro);
 
 //Sensores
 Sensor * alocaSensor(int codigo, int tipo,  int status);
 void insereSensor(Bairro *pauxBairro, int codBairro, int codSensor, int tipo,  int status);
 //void removeSensorCodigo(Bairro *enderecoBairro, int codSensor);//terminar
+
+Sensor * verificaSensor (Sensor *pauxSensor, int codSensor);
 
 //Ocorrências
 Ocorrencia * alocaOcorrencia(int codigo, int severidade, char descricao[], int status);

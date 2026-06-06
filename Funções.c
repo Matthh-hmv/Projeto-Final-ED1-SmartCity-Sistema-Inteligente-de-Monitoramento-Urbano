@@ -31,9 +31,9 @@ void carregarChamados(Bairro *listaBairros, Equipe *listaEquipes)
 		return;
 	}
 
-	int codChamado, codOcorrencia, codEquipe, prioridade, statusSensor;
+	int codChamado, codOcorrencia, codEquipe, priori, statusSensor;
 
-	while(fscanf(arquivoChamados, "%d %d %d %d %d", &codChamado, &codOcorrencia, &codEquipe, &prioridade, &statusSensor) == 5)
+	while(fscanf(arquivoChamados, "%d %d %d %d %d", &codChamado, &codOcorrencia, &codEquipe, &priori, &statusSensor) == 5)
 	{
 		Ocorrencia *OcorrenciaReal = NULL;
 		Bairro *pauxBairro = listaBairros;
@@ -50,8 +50,8 @@ void carregarChamados(Bairro *listaBairros, Equipe *listaEquipes)
 
 			pauxBairro = pauxBairro->prox;
 		}
-
-		inserirChamadoEquipe(listaEquipes, codEquipe, codChamado, prioridade, statusSensor, OcorrenciaReal);
+		Chamado *novoChamado = alocaChamado(codChamado, priori, statusSensor, OcorrenciaReal);
+		inserirChamadoEquipe(listaEquipes, codEquipe, novoChamado);
 	}
 
 	fclose(arquivoChamados);
@@ -68,12 +68,15 @@ void carregarEquipes(Equipe **listaEquipes)
 		return;
 	}
 
-	int cod, especialidade;
+	int cod, espec;
 	char nomeEquipe[50];
 
 
-	while(fscanf(arquivoEquipes, "%d %s %d", &cod, nomeEquipe, &especialidade) == 3)
-		inserirEquipe(listaEquipes, cod, nomeEquipe, especialidade);
+	while(fscanf(arquivoEquipes, "%d %s %d", &cod, nomeEquipe, &espec) == 3)
+	{
+		Equipe *novo = alocaEquipe(cod, nomeEquipe, espec);
+		inserirEquipe(listaEquipes, novo);
+	}
 
 	fclose(arquivoEquipes);
 }
@@ -151,7 +154,7 @@ void carregarSensores(Bairro *listaBairros)
 
 
 // GERENCIAR EQUIPES:
-void inserirEquipe(Equipe **listaEquipes, int codEquipe, char *nomeEquipe, int espec)
+Equipe *alocaEquipe(int codEquipe, char *nomeEquipe, int espec)
 {
 	Equipe *novo = NULL;
 	novo = (Equipe *)malloc(sizeof(Equipe));
@@ -170,19 +173,27 @@ void inserirEquipe(Equipe **listaEquipes, int codEquipe, char *nomeEquipe, int e
 		novo->totalAtendimentos = 0;
 		novo->listaChamados = NULL;
 		novo->prox = NULL;
+	}
+	return novo;
+}
 
-		if(*listaEquipes == NULL)
-			*listaEquipes = novo;
+void inserirEquipe(Equipe **listaEquipes, Equipe *novaEquipe)
+{
 
-		else
-		{
-			Equipe *paux = *listaEquipes;
+	if(novaEquipe == NULL)
+		return;
 
-			while(paux->prox != NULL)
-				paux = paux->prox;
+	if(*listaEquipes == NULL)
+		*listaEquipes = novaEquipe;
 
-			paux->prox = novo;
-		}
+	else
+	{
+		Equipe *paux = *listaEquipes;
+
+		while(paux->prox != NULL)
+			paux = paux->prox;
+
+		paux->prox = novaEquipe;
 	}
 }
 
@@ -199,49 +210,6 @@ Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe)
 }
 
 
-void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, int codChamado, int priori, int statusSensor, Ocorrencia *OcorrenciaReal)
-{
-	Equipe *eqp = buscarEquipe(listaEquipes, codEquipe);
-
-	if(eqp == NULL)
-	{
-		printf("equipe nao encntrada!\n");
-		return;
-	}
-
-	Chamado *novo = NULL;
-	novo = (Chamado *)malloc(sizeof(Chamado));
-
-	if(novo == NULL)
-	{
-		printf("erro de alocacao!\n");
-		return;
-	}
-
-	if(novo)
-	{
-		novo->codigo = codChamado;
-		novo->prioridade = priori;
-		novo->status = statusSensor;
-		novo->ocorrencia = OcorrenciaReal;
-		novo->prox = NULL;
-
-
-		if(eqp->listaChamados == NULL)
-			eqp->listaChamados = novo;
-
-		else
-		{
-			Chamado *paux = eqp->listaChamados;
-
-			while(paux->prox != NULL)
-				paux = paux->prox;
-
-			paux->prox = novo;
-		}
-	}
-}
-
 void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe)
 {
 	Equipe *equipeDestino = buscarEquipe(listaEquipes, codEquipe);
@@ -257,28 +225,24 @@ void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe)
 	Chamado *anteriorChamado = NULL;
 	Equipe *equipeAntiga = NULL;
 
-	while(equipeAtual != NULL)
+	while(equipeAtual != NULL && chamadoAlvo == NULL)
 	{
 		Chamado *pauxChamado = equipeAtual->listaChamados;
-		Chamado *anterior = NULL;
-
+		Chamado *pauxAnterior = NULL;
 
 		while(pauxChamado != NULL)
 		{
 			if(pauxChamado->codigo == codChamado)
 			{
 				chamadoAlvo = pauxChamado;
-				anteriorChamado = anterior;
+				anteriorChamado = pauxAnterior;
 				equipeAntiga = equipeAtual;
 				break;
 			}
 
-			anterior = pauxChamado;
+			pauxAnterior = pauxChamado;
 			pauxChamado = pauxChamado->prox;
 		}
-
-		if(chamadoAlvo)
-			break;
 
 		equipeAtual = equipeAtual->prox;
 	}
@@ -304,20 +268,58 @@ void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe)
 
 	chamadoAlvo->prox = NULL;
 
-	if(equipeDestino->listaChamados == NULL)
-		equipeDestino->listaChamados = chamadoAlvo;
+	inserirChamadoEquipe(listaEquipes, equipeDestino->codigo, chamadoAlvo);
+
+	printf("Chamado %d associado com sucesso a equipe %s \n", codChamado, equipeDestino->nome);
+}
+
+
+Chamado *alocaChamado(int cod, int priori, int statusChamado, Ocorrencia *OcorrenciaReal)
+{
+	Chamado *novo = (Chamado *)malloc(sizeof(Chamado));
+	if(novo == NULL)
+	{
+		printf("Erro de alocacao \n");
+		return NULL;
+	}
+
+	novo->codigo = cod;
+	novo->prioridade = priori;
+	novo->status = statusChamado;
+	novo->ocorrencia = OcorrenciaReal;
+	novo->prox = NULL;
+
+	return novo;
+}
+
+
+void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoChamado)
+{
+	if(novoChamado == NULL)
+		return;
+
+	Equipe *eqp = buscarEquipe(listaEquipes, codEquipe);
+
+	if(eqp == NULL)
+	{
+		printf("equipe nao encntrada!\n");
+		free(novoChamado);
+		return;
+	}
+
+
+	if(eqp->listaChamados == NULL)
+		eqp->listaChamados = novoChamado;
 
 	else
 	{
-		Chamado *paux = equipeDestino->listaChamados;
+		Chamado *paux = eqp->listaChamados;
 
 		while(paux->prox != NULL)
 			paux = paux->prox;
 
-		paux->prox = chamadoAlvo;
+		paux->prox = novoChamado;
 	}
-
-	printf("Chamado %d associado com sucesso a equipe %s \n", codChamado, equipeDestino->nome);
 }
 
 
@@ -357,7 +359,6 @@ void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, in
 
 	Equipe *equipeCompativel = listaEquipes;
 
-
 	while(equipeCompativel != NULL)
 	{
 		if(equipeCompativel->especialidade == tipoSensor)
@@ -372,25 +373,18 @@ void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, in
 		return;
 	}
 
-	inserirChamadoEquipe(listaEquipes, equipeCompativel->codigo, codChamado, priori, statusSensor, OcorrenciaReal);
-	
-	Chamado *pauxChamado = equipeCompativel->listaChamados;
+	Chamado *novoChamado = alocaChamado(codChamado, priori, statusSensor, OcorrenciaReal);
+	inserirChamadoEquipe(listaEquipes, equipeCompativel->codigo, novoChamado);
 
-	while(pauxChamado->prox != NULL)
-		pauxChamado = pauxChamado->prox;
-
-	OcorrenciaReal->chamado = pauxChamado;
+	OcorrenciaReal->chamado = novoChamado;
 
 	printf("Chamado %d gerado automaticamente e atribuido a equipe %s \n", codChamado, equipeCompativel->nome);
 }
 
 
-
-void finalizarChamado(Equipe *listaEquipes, int codChamado)
+Chamado *verificaChamado(Equipe *listaEquipes, int codChamado)
 {
 	Equipe *equipeAtual = listaEquipes;
-	Chamado *chamadoAlvo = NULL;
-	Equipe *equipeResponsavel = NULL;
 
 	while(equipeAtual != NULL)
 	{
@@ -399,20 +393,19 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado)
 		while(pauxChamado != NULL)
 		{
 			if(pauxChamado->codigo == codChamado)
-			{
-				chamadoAlvo = pauxChamado;
-				equipeResponsavel = equipeAtual;
-				break;
-			}
+				return pauxChamado;  //enconrou chamado na memoria
 
 			pauxChamado = pauxChamado->prox;
 		}
-
-		if(chamadoAlvo)
-			break;
-
 		equipeAtual = equipeAtual->prox;
 	}
+	return NULL; // nao existe no sistema
+}
+
+
+void finalizarChamado(Equipe *listaEquipes, int codChamado)
+{
+	Chamado *chamadoAlvo = verificaChamado(listaEquipes, codChamado);
 
 	if(chamadoAlvo == NULL)
 	{
@@ -421,14 +414,12 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado)
 	}
 
 	chamadoAlvo->status = 3; // 3 = chamado finalizado
-	equipeResponsavel->totalAtendimentos++;
 
 	if(chamadoAlvo->ocorrencia != NULL)
 		chamadoAlvo->ocorrencia->status = 0; //ocorrencia resovlida
 
-	printf("Chamado %d finalizado com sucesso pela equipe %s \n", codChamado, equipeResponsavel->nome);
+	printf("Chamado %d finalizado com sucesso! \n", codChamado);
 }
-
 
 //MATHEUS
 

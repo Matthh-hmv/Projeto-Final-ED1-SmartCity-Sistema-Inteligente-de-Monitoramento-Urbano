@@ -781,4 +781,3 @@ Ocorrencia * verificaOcorrencia(Ocorrencia *pauxOcorrencia, int codOcorrencia) /
 	}
 	return NULL;
 }
-

@@ -163,7 +163,7 @@ Equipe *alocaEquipe(int codEquipe, char *nomeEquipe, int espec)
 	if(novo == NULL)
 	{
 		printf("erro de alocacao!\n");
-		return;
+		return NULL;
 	}
 
 	if(novo)
@@ -323,7 +323,6 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 	}
 }
 
-
 Chamado *verificaChamado(Equipe *listaEquipes, int codChamado)
 {
 	Equipe *equipeAtual = listaEquipes;
@@ -447,6 +446,217 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado)
 
 	printf("Chamado %d finalizado com sucesso! \n", codChamado);
 }
+
+void salvaSistema(Bairro *listaBairros, Equipe *listaEquipes)
+{
+	//ATUALIZAR ARQUIVO txt BAIRROS
+	FILE *arquivoBairros = fopen("entradas/bairros.txt", "w");
+	
+	if(arquivoBairros)
+	{
+		Bairro *pauxB = listaBairros;
+
+		while(pauxB != NULL)
+		{
+			fprintf(arquivoBairros, "%d %s\n", pauxB->codigo, pauxB->nome);
+			pauxB = pauxB->prox;
+		}
+		fclose(arquivoBairros);
+	}
+	else
+		printf("Erro ao atualizar entradas/bairros.txt\n");
+
+
+	//ATUALIZAR ARQUIVO txt EQUIPES
+	FILE *arquivoEquipes = fopen("entradas/equipes.txt", "w");
+	
+	if(arquivoEquipes)
+	{
+		Equipe *pauxE = listaEquipes;
+
+		while(pauxE != NULL)
+		{
+			fprintf(arquivoEquipes, "%d %s %d\n", pauxE->codigo, pauxE->nome, pauxE->especialidade);
+			pauxE = pauxE->prox;
+		}
+		fclose(arquivoEquipes);
+	}
+	else
+		printf("Erro ao atualizar entradas/equipes.txt\n");
+
+
+	//ATUALIZAR ARQUIVO txt SENSORES E OCORRENCIAS
+	FILE *arquivoSensores = fopen("entradas/sensores.txt", "w");
+	FILE *arquivoOcorrencias = fopen("entradas/ocorrencias.txt", "w");
+
+	if(arquivoSensores && arquivoOcorrencias)
+	{
+		Bairro *pauxBairroAtual = listaBairros;
+
+		while(pauxBairroAtual != NULL)
+		{
+			Sensor *pauxSensorAtual = pauxBairroAtual->listaSensores;
+
+			while(pauxSensorAtual != NULL)
+			{
+				fprintf(arquivoSensores, "%d %d %d %d\n", pauxSensorAtual->codigo, pauxSensorAtual->tipo, pauxSensorAtual->status, pauxBairroAtual->codigo);
+
+				Ocorrencia *pauxOcorrenciaAtual = pauxSensorAtual->listaOcorrencias;
+
+				while(pauxOcorrenciaAtual != NULL)
+				{
+					fprintf(arquivoOcorrencias, "%d %d %d %d %d %s\n", pauxOcorrenciaAtual->codigo, pauxOcorrenciaAtual->severidade, pauxOcorrenciaAtual->status, pauxSensorAtual->codigo, pauxBairroAtual->codigo, pauxOcorrenciaAtual->descricao);
+
+					pauxOcorrenciaAtual = pauxOcorrenciaAtual->prox;
+				}
+				pauxSensorAtual = pauxSensorAtual->prox;
+			}
+			pauxBairroAtual = pauxBairroAtual->prox;
+		}
+
+		fclose(arquivoSensores);
+		fclose(arquivoOcorrencias);
+	}
+
+	else
+	{
+		printf("Erro ao abrir sensores ou ocorrencias para salvar\n");
+
+		if(arquivoSensores)
+			fclose(arquivoSensores);
+
+		if(arquivoOcorrencias)
+			fclose(arquivoOcorrencias);
+	}
+
+
+	//ATUALIZAR ARQUIVO txt CHAMADOS
+	FILE *arquivoChamados = fopen("entradas/chamados.txt", "w");
+	
+	if(arquivoChamados)
+	{
+		Equipe *pauxEquipeAtual = listaEquipes;
+
+		while(pauxEquipeAtual != NULL)
+		{
+			Chamado *pauxChamadoAtual = pauxEquipeAtual->listaChamados;
+
+			while(pauxChamadoAtual != NULL)
+			{
+				int idOcorrencia;
+
+				if(pauxChamadoAtual->ocorrencia != NULL)
+					idOcorrencia = pauxChamadoAtual->ocorrencia->codigo;
+
+				else
+					idOcorrencia = -1;
+
+				fprintf(arquivoChamados, "%d %d %d %d %d\n", pauxChamadoAtual->codigo, idOcorrencia, pauxEquipeAtual->codigo, pauxChamadoAtual->prioridade, pauxChamadoAtual->status);
+				
+				pauxChamadoAtual = pauxChamadoAtual->prox;
+			} 
+
+			pauxEquipeAtual = pauxEquipeAtual->prox;
+		}
+		fclose(arquivoChamados);
+	}
+
+	else
+		printf("Erro ao atualizar entradas/chamados.txt\n");
+}
+
+
+void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
+{
+	FILE *relatorio = fopen("saidas/relatorio_final.txt", "w");
+	if(!relatorio)
+	{
+		printf("Erro ao criar saidas/relatorio_final.txt\n");
+		return;
+	}
+
+	fprintf(relatorio, "SMARTCITY - RELATORIO FINAL \n");
+
+	//relatorio 1
+	fprintf(relatorio, "RELATORIO 1: BAIRROS COM MAIOR QUANTIDADE DE OCORRENCIAS \n");
+
+	Bairro *pauxB = listaBairros;
+
+	if(pauxB == NULL)
+		fprintf(relatorio, "Nenhum bairro cadastrado.\n");
+
+	else
+	{
+		while(pauxB != NULL)
+		{
+			fprintf(relatorio, "Bairro: %s (cod: %d) | Total de ocorrências: %d\n", pauxB->nome, pauxB->codigo, pauxB->quantidadeOcorrencias);
+			pauxB = pauxB->prox;
+		}
+	}
+	fprintf(relatorio, "\n");
+
+
+	//relatorio 2
+	fprintf(relatorio, "RELATORIO 2: SENSORES OFFLINES \n");
+	pauxB = listaBairros;
+	int encontrouOff = 0;
+
+	while(pauxB != NULL)
+	{
+		Sensor *pauxS = pauxB->listaSensores;
+
+		while(pauxS != NULL)
+		{
+			if(pauxS->status == 3)
+			{
+				fprintf(relatorio, "Sensor ID: %d | Tipo: %d no Bairro: %d\n", pauxS->codigo, pauxS->tipo, pauxB->nome);
+				encontrouOff = 1;
+			}
+			pauxS = pauxS->prox;
+		}
+		pauxB = pauxB->prox;
+	}
+
+	if(!encontrouOff)
+		fprintf(relatorio, "Nenhum sensor offline no momento.\n");
+
+	fprintf(relatorio, "\n");
+
+
+	//realtorio 3
+	fprintf(relatorio, "RELATORIO 3: OCORRÊNCIAS CRÍTICAS ABERTAS \n");
+	pauxB = listaBairros;
+	int encontrouCritica = 0;
+
+	while(pauxB != NULL)
+	{
+		Sensor *pauxS = pauxB->listaSensores;
+
+		while(pauxS != NULL)
+		{
+			Ocorrencia *pauxO = pauxS->listaOcorrencias;
+
+			while(pauxO != NULL)
+			{
+				if(pauxO->severidade == 4 && pauxO->status == 1)
+				{
+					fprintf(relatorio, "Ocorrencia ID: %d | Descrição: %s\n", pauxO->codigo, pauxO->descricao);
+					encontrouCritica = 1;
+				}
+				pauxO = pauxO->prox;
+			}
+			pauxS = pauxS->prox;
+		}
+		pauxB = pauxB->prox;
+	}
+
+	if(!encontrouCritica)
+		fprintf(relatorio, "Nenhuma ocorrencia critica aberta detectada.\n");
+
+	fprintf(relatorio, "\n");
+
+}
+
 
 //MATHEUS
 

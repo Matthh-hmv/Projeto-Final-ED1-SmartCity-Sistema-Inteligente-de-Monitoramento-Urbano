@@ -178,11 +178,14 @@ Equipe *alocaEquipe(int codEquipe, char *nomeEquipe, int espec)
 	return novo;
 }
 
-void inserirEquipe(Equipe **listaEquipes, Equipe *novaEquipe)
+void inserirEquipe(Equipe **listaEquipes, Equipe *novaEquipe, int *flag)
 {
 
 	if(novaEquipe == NULL)
+	{
+		*flag = 0;
 		return;
+	}
 
 	if(*listaEquipes == NULL)
 		*listaEquipes = novaEquipe;
@@ -196,6 +199,8 @@ void inserirEquipe(Equipe **listaEquipes, Equipe *novaEquipe)
 
 		paux->prox = novaEquipe;
 	}
+
+	*flag = 1;
 }
 
 Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe)
@@ -211,13 +216,14 @@ Equipe *buscarEquipe(Equipe *listaEquipes, int codEquipe)
 }
 
 
-void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe)
+void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe, int *flag)
 {
 	Equipe *equipeDestino = buscarEquipe(listaEquipes, codEquipe);
 
 	if(equipeDestino == NULL)
 	{
 		printf("equipe nao encontrada!\n");
+		*flag = 0;
 		return;
 	}
 
@@ -251,12 +257,14 @@ void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe)
 	if(chamadoAlvo == NULL)
 	{
 		printf("Chamado %d nao encontrado no sistema. \n", codChamado);
+		*flag = 0;
 		return;
 	}
 
 	if(equipeDestino->especialidade != equipeAntiga->especialidade)
 	{
 		printf("A equipe %s nao pode atender ao chamado %d. Especialidade incompativel!", equipeDestino->nome, codChamado);
+		*flag = 0;
 		return;
 	}
 
@@ -268,10 +276,12 @@ void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe)
 
 
 	chamadoAlvo->prox = NULL;
+	int flagInterna;
 
-	inserirChamadoEquipe(listaEquipes, equipeDestino->codigo, chamadoAlvo);
+	inserirChamadoEquipe(listaEquipes, equipeDestino->codigo, chamadoAlvo, &flagInterna);
 
 	printf("Chamado %d associado com sucesso a equipe %s \n", codChamado, equipeDestino->nome);
+	*flag = 1;
 }
 
 
@@ -294,10 +304,13 @@ Chamado *alocaChamado(int cod, int priori, int statusChamado, Ocorrencia *Ocorre
 }
 
 
-void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoChamado)
+void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoChamado, int *flag)
 {
 	if(novoChamado == NULL)
+	{
+		*flag = 0;
 		return;
+	}
 
 	Equipe *eqp = buscarEquipe(listaEquipes, codEquipe);
 
@@ -305,6 +318,7 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 	{
 		printf("equipe nao encntrada!\n");
 		free(novoChamado);
+		*flag = 0;
 		return;
 	}
 
@@ -321,7 +335,10 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 
 		paux->prox = novoChamado;
 	}
+	
+	*flag = 1;
 }
+
 
 Chamado *verificaChamado(Equipe *listaEquipes, int codChamado)
 {
@@ -344,11 +361,12 @@ Chamado *verificaChamado(Equipe *listaEquipes, int codChamado)
 }
 
 
-void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, int codOcorrencia, int priori, int statusSensor)
+void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, int codOcorrencia, int priori, int statusSensor, int *flag)
 {
 	if(verificaChamado(listaEquipes, codChamado) != NULL)
 	{
 		printf("O chamado %d ja esta cadastrado no sistema. \n", codChamado);
+		*flag = 0;
 		return;
 	}
 
@@ -381,6 +399,7 @@ void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, in
 	if(OcorrenciaReal == NULL)
 	{
 		printf("Ocorrencia %d nao encontrada. Chamado %d cancelado \n", codOcorrencia, codChamado);
+		*flag = 0;
 		return;
 	}
 
@@ -397,19 +416,21 @@ void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, in
 	if(equipeCompativel == NULL)
 	{
 		printf("Nenhuma equipe com especialidade %d cadastrada para atender o chamado %d\n", tipoSensor, codChamado);
+		*flag = 0;
 		return;
 	}
 
 	Chamado *novoChamado = alocaChamado(codChamado, priori, statusSensor, OcorrenciaReal);
-	inserirChamadoEquipe(listaEquipes, equipeCompativel->codigo, novoChamado);
+	inserirChamadoEquipe(listaEquipes, equipeCompativel->codigo, novoChamado, &flagInterna);
 
 	OcorrenciaReal->chamado = novoChamado;
 
 	printf("Chamado %d gerado automaticamente e atribuido a equipe %s \n", codChamado, equipeCompativel->nome);
+	*flag = 1;
 }
 
 
-void finalizarChamado(Equipe *listaEquipes, int codChamado)
+void finalizarChamado(Equipe *listaEquipes, int codChamado, int *flag)
 {
 	Equipe *equipeAtual = listaEquipes;
 	Chamado *chamadoAlvo = NULL;
@@ -435,6 +456,7 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado)
 	if(chamadoAlvo == NULL)
 	{
 		printf("Chamado %d nao encontrado no sistema \n", codChamado);
+		*flag = 0;
 		return;
 	}
 
@@ -445,6 +467,7 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado)
 		chamadoAlvo->ocorrencia->status = 0; //ocorrencia resovlida
 
 	printf("Chamado %d finalizado com sucesso! \n", codChamado);
+	*flag = 1;
 }
 
 
@@ -663,7 +686,7 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 	Equipe *maisAtendimentos = listaEquipes;
 
 	if(pauxE == NULL)
-		fprintf("Nenhuma equipe cadastrada.\n");
+		fprintf(relatorio, "Nenhuma equipe cadastrada.\n");
 
 	else
 	{
@@ -689,7 +712,7 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 	pauxB = listaBairros;
 
 	if(pauxB == NULL)
-		fprintf("Nenhum bairro monitorado.\n");
+		fprintf(relatorio, "Nenhum bairro monitorado.\n");
 
 	else
 	{
@@ -726,6 +749,26 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 	fclose(relatorio);
 	printf("Arquivo relatorio.txt gerado com sucesso!  \n");
 }
+
+
+void registraLog(const char *operacao, const char *status, const char *dados)
+{
+	FILE *arquivoLog = fopen("saidas/log_execucao.txt", "a");
+
+	if(!arquivoLog)
+	{
+		printf("Erro ao abrir log_execucao.txt. \n");
+		return;
+	}
+
+	static int horarioLogico = 1; //static para manter o valor na memoria entre as chamadas da funcao
+
+	fprintf(arquivoLog, "PASSO %d | Operacao: %d | Status: %s | Dados: %s\n", horarioLogico, operacao, status, dados);
+
+	horarioLogico++;
+	fclose(arquivoLog);
+}
+
 
 
 //MATHEUS

@@ -660,8 +660,7 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 
 //MATHEUS
 
-//Remover os sensores e ocorrencias quando fazer a remocao dos bairros
-//Terminar funcoes dos sensores
+
 //Fazer chamado automatico dependendo da severidade ou offline do sensor (precisa da funcao do chamado)
 
 //Funções Bairro
@@ -682,34 +681,37 @@ Bairro * alocaBairro(int codigo, char nome[])
 	return novo;
 }
 
-void insereBairro(Bairro **listaBairro, int codigo, char nome[])
+void insereBairro(Bairro **listaBairro, int codigo, char nome[], int *flag)
 {
-	Bairro *novo = alocaBairro(codigo, nome);
+	if (verificaBairro(*listaBairro, codigo))
+    {
+    	*flag = 0;
+    	return;
+    }
+    if (verificaBairroNome(*listaBairro, nome) == 1)
+  	{
+  		*flag = 0;
+  		return;
+  	}
+  	Bairro *novo = alocaBairro(codigo, nome);
+
 	if (novo == NULL)
+	{
+		*flag = 0;
 		return;
+	}	
 	if(*listaBairro == NULL)
 	{
 		*listaBairro = novo;
+		*flag = 1;
 		return;
 	}
 	Bairro *pauxBairro = *listaBairro;
 	while (pauxBairro -> prox != NULL)
 		pauxBairro = pauxBairro -> prox;
 	pauxBairro -> prox = novo;
+	*flag = 1;
 	return;
-}
-
-void buscaBairro(Bairro *pauxBairro, int codBairro)
-{
-	Bairro *enderecoBairro = verificaBairro(pauxBairro, codBairro);
-	if (enderecoBairro == NULL)
-	{
-		printf("\nBairro não cadastrado!");
-		return;
-	}
-	printf("\nBairro %s - cod: %d", enderecoBairro->nome, enderecoBairro->codigo);
-	printf("\nQuantidade de ocorrências: %d", enderecoBairro->quantidadeOcorrencias);
-	printf("\nQuantidade de sensores: %d", enderecoBairro->quantidadeSensores);
 }
 
 void listaBairro(Bairro *pauxBairro)
@@ -727,26 +729,23 @@ void listaBairro(Bairro *pauxBairro)
 	return;
 }
 
-void removeBairroCodigo(Bairro **listaBairro, int codBairro)
+void removeBairroCodigo(Bairro **listaBairro, int codBairro, int *flag)
 {
 	Bairro *pauxBairro = *listaBairro;
-	if (pauxBairro == NULL)
-	{
-		printf("\nLista de bairros está vazia!");
-		return;
-	}
 	Bairro * enderecoBairro = verificaBairro(pauxBairro, codBairro); 
 	if (enderecoBairro == NULL)
 	{
 		printf("\nNão existe bairro com esse codigo!");
+		*flag = 0;
 		return;
 	} //Tratamento de erros
-
+	while (enderecoBairro -> listaSensores)
+			removeSensorInicio(enderecoBairro);
 	if (pauxBairro == enderecoBairro)
 	{
 		*listaBairro = pauxBairro -> prox;
-		//Apagar sensores
 		free(pauxBairro);
+		*flag = 1;
 		return;
 	}//Remocao se o bairro for o primeiro
 
@@ -755,8 +754,8 @@ void removeBairroCodigo(Bairro **listaBairro, int codBairro)
 		if ((pauxBairro -> prox) == enderecoBairro)
 		{
 			pauxBairro -> prox = enderecoBairro -> prox;
-			//Apagar sensores
 			free(enderecoBairro);
+			*flag = 1;
 			return;
 		}	
 		pauxBairro = pauxBairro -> prox;
@@ -766,8 +765,18 @@ void removeBairroCodigo(Bairro **listaBairro, int codBairro)
 
 void removeBairroInicio(Bairro **listaBairro)
 {
-	//fazer para a desalocacao final
-}
+	if (*listaBairro == NULL)
+	{
+		return;
+	}
+	Bairro *pauxBairro = *listaBairro;
+	*listaBairro = pauxBairro -> prox;
+	while (pauxBairro -> listaSensores)
+		removeSensorInicio(pauxBairro);
+	free(pauxBairro);
+	pauxBairro = NULL;
+	return;		
+} //Usado para desalocacao final, nao precisa remover dos arquivos
 
 Bairro * verificaBairro(Bairro *pauxBairro, int codBairro) //Verifica se o bairro existe na lista, se sim retorna 1, se nao retorna 0
 {
@@ -780,7 +789,36 @@ Bairro * verificaBairro(Bairro *pauxBairro, int codBairro) //Verifica se o bairr
 	return NULL;
 } //Ainda pode usar na verificacao de codigo para nao criar dois bairros com o mesmo codigo, se o valor retornado nao for nulo eh pq ja existe
 
+int verificaBairroNome(Bairro *pauxBairro, char nomeBairro[])
+{
+    char nomeBuscaMinusculo[50]; 
+    int i;
 
+    for(i = 0; nomeBairro[i] != '\0'; i++)
+    {
+        nomeBuscaMinusculo[i] = tolower(nomeBairro[i]);
+    }
+    nomeBuscaMinusculo[i] = '\0'; 
+
+    while (pauxBairro != NULL)
+    {
+        char nomeBairroSalvoMinusculo[50];
+        
+        for(i = 0; pauxBairro->nome[i] != '\0'; i++)
+        {
+            nomeBairroSalvoMinusculo[i] = tolower(pauxBairro->nome[i]);
+        }
+        nomeBairroSalvoMinusculo[i] = '\0';
+
+        if (strcmp(nomeBairroSalvoMinusculo, nomeBuscaMinusculo) == 0)
+        {
+            return 1; //Ja existe um bairro com esse nome
+        }
+        
+        pauxBairro = pauxBairro->prox;
+    }
+    return 0; // Nao existe um bairro com esse nome
+}
 
 
 //Funções Sensores
@@ -798,16 +836,32 @@ Sensor * alocaSensor(int codigo, int tipo,  int status)
 	return novo;
 }
 
-void insereSensor(Bairro *enderecoBairro, int codBairro, int codSensor, int tipo,  int status)//fazer verificacao do endereco bairro na main
+void insereSensor(Bairro *listaBairro, int codBairro, int codSensor, int tipo,  int status, int *flag)//fazer verificacao do endereco do bairro na main
 {
+	Bairro * enderecoBairro = verificaBairro(listaBairro, codBairro)
+	if(enderecoBairro == NULL)
+	{
+        *flag = 0;
+        return;
+	}
+	if(verificaSensorGlobal(listaBairro, codSensor))
+    {
+        *flag = 0;
+        return;
+    }
+	
 	Sensor *novo = alocaSensor(codSensor, tipo, status);
 	if (novo == NULL)
+	{
+		*flag = 0;
 		return;
+	}	
 	Sensor **listaSensores = &(enderecoBairro -> listaSensores);
 	if (*listaSensores == NULL)
 	{
 		*listaSensores = novo;
 		enderecoBairro -> quantidadeSensores++;
+		*flag = 1;
 		return;
 	}
 	Sensor *pauxSensor = *listaSensores;
@@ -815,50 +869,30 @@ void insereSensor(Bairro *enderecoBairro, int codBairro, int codSensor, int tipo
 		pauxSensor = pauxSensor -> prox;
 	pauxSensor -> prox = novo;
 	enderecoBairro -> quantidadeSensores++;
+	*flag = 1;
 	return;
 }
 
-void removeSensorCodigo(Bairro *enderecoBairro, int codSensor)//Acha o endereco do bairro na main
+void removeSensorInicio(Bairro *enderecoBairro)
 {
-	Sensor *pauxSensor = enderecoBairro->listaSensores;
-	if (pauxSensor == NULL)
+	if (enderecoBairro -> listaSensores == NULL)
 	{
-		printf("\nLista de sensores desse bairro está vazia!");
-		return;
-	}
-	Sensor *enderecoSensor = verificaSensor(pauxSensor, codSensor);
-	if (enderecoSensor == NULL)
-	{
-		printf("\nNão existe sensor com esse codigo nesse bairro");
-		return;
-	}
-	if (pauxSensor == enderecoSensor)
-	{
-		enderecoBairro -> listaSensores = enderecoSensor -> prox;
-		while(enderecoSensor -> listaOcorrencias)
-			removeOcorrenciaInicio(enderecoBairro, &(enderecoSensor -> listaOcorrencias));
-		free(enderecoSensor);
-		return;
-	}//Remocao se o sensor for o primeiro
-
-	while(pauxSensor -> prox != NULL)
-	{
-		if ((pauxSensor -> prox) == enderecoSensor)
-		{
-			pauxSensor -> prox = enderecoSensor -> prox;
-			while(enderecoSensor -> listaOcorrencias)
-				removeOcorrenciaInicio(enderecoBairro, &(enderecoSensor -> listaOcorrencias));
-			free(enderecoSensor);
 			return;
-		}	
-		pauxSensor = pauxSensor -> prox;
 	}
-
-}
+	Sensor * pauxSensor = enderecoBairro -> listaSensores;
+	enderecoBairro -> listaSensores = pauxSensor -> prox;
+	while(pauxSensor -> listaOcorrencias)
+	{
+		removeOcorrenciaInicio(enderecoBairro, &(pauxSensor -> listaOcorrencias));
+	}	
+	free(pauxSensor);
+	pauxSensor = NULL;
+	return;
+}//Usado so para remover os sensores quando um bairro for apagado ou na liberacao final de memoria
 
 Sensor * verificaSensor (Sensor *pauxSensor, int codSensor)
 {
-	while (pauxSensor != NULL) //Percorre os bairros
+	while (pauxSensor != NULL) //Percorre os sensores do bairro
 	{
 		if (pauxSensor->codigo == codSensor)
 			return pauxSensor;
@@ -866,6 +900,85 @@ Sensor * verificaSensor (Sensor *pauxSensor, int codSensor)
 	}
 	return NULL;
 
+} //Usado para achar o endereco do sensor no bairro
+
+Sensor* verificaSensorGlobal(Bairro *pauxBairro, int codSensor)
+{
+    while (pauxBairro != NULL)
+    {
+        Sensor *pauxSensor = pauxBairro->listaSensores;
+        while (pauxSensor != NULL)
+        {
+            if (pauxSensor->codigo == codSensor)
+                return pauxSensor; 
+            pauxSensor = pauxSensor->prox;    
+        }  
+        pauxBairro = pauxBairro->prox;
+    }
+    return NULL; 
+}//Verifica se existe um sensor em outros bairros com o mesmo codigo
+
+void alteraStatusSensor(Bairro *listaBairros, int codSensor, int novoStatus, int *flag)
+{
+    Sensor *sensorAlvo = verificaSensorGlobal(listaBairros, codSensor);
+    if (sensorAlvo == NULL)
+    {
+        *flag = 0; 
+        return;
+    }
+    sensorAlvo->status = novoStatus;
+    *flag = 1; 
+}
+
+void listaSensor(Sensor *enderecoSensor)
+{
+	char tipoSensorChar[30], statusSensorChar[30];
+	switch(enderecoSensor -> tipo)
+    {
+        case 1: strcpy(tipoSensorChar, "Temperatura");break;
+        case 2: strcpy(tipoSensorChar, "Enchente");break;
+        case 3: strcpy(tipoSensorChar, "Fumaca");break;
+        case 4: strcpy(tipoSensorChar, "Transito");break;
+        case 5: strcpy(tipoSensorChar, "Iluminacao_publica");break;
+    }
+    switch(enderecoSensor -> status)
+    {
+    case 1: strcpy(statusSensorChar, "Ativo");break;
+    case 2: strcpy(statusSensorChar, "Manutencao");break;
+    case 3: strcpy(statusSensorChar, "Offline");break;
+    }
+    printf("\n=================================");
+    printf("\nSensor cod - %d", enderecoSensor -> codigo);
+    printf("\nTipo - %s", tipoSensorChar);
+    printf("\nStatus - %s", statusSensorChar);
+    printf("\n=================================");
+}
+
+void listaSensoresPorBairro(Bairro *listaBairro, int codBairro, int *flag)
+{
+    Bairro * enderecoBairro = verificaBairro(listaBairro, codBairro)
+	if(enderecoBairro == NULL)
+	{
+        *flag = 0;
+        return;
+	}
+    if (enderecoBairro -> listaSensores == NULL)
+    {
+        printf("\nNenhum sensor cadastrado neste bairro!\n");
+        *flag = 0;
+        return;
+    }
+    
+    Sensor *pauxSensor = enderecoBairro->listaSensores;
+    
+    printf("\nBairro %s - Cod: %d", enderecoBairro->nome, enderecoBairro->codigo);
+    
+    while (pauxSensor != NULL)
+    {
+        listaSensor(pauxSensor);
+        pauxSensor = pauxSensor->prox;
+    }
+    *flag = 1;
 }
 
 //Funções Ocorrências
@@ -957,7 +1070,7 @@ void removeOcorrenciaCodigo(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia
 		pauxOcorrencia = pauxOcorrencia -> prox;
 	}//Remocao no inicio e no fim
 
-}
+} //Usado so para remover as ocorrencias quando um sensor for apagado ou na liberacao final de memoria
 
 void removeOcorrenciaInicio(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia)//Ja faz com que o ponteiro da ocorrencia do chamado seja setado como nulo
 {
@@ -991,3 +1104,5 @@ Ocorrencia * verificaOcorrencia(Ocorrencia *pauxOcorrencia, int codOcorrencia) /
 	}
 	return NULL;
 }
+
+

@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include<ctype.h> //Funcao tlower()
 
 #ifndef PROTOTIPOS_H
 #define PROTOTIPOS_H
@@ -76,20 +77,23 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado);
 
 
 //Bairro
-Bairro * alocaBairro(int codigo, char nome[]);
-void insereBairro(Bairro **listaBairro, int codigo, char nome[]);
-void buscaBairro(Bairro *pauxBairro, int codBairro); //Talvez redundante, ver a adaptação na main com o verificaBairro
-void listaBairro(Bairro *pauxBairro);
-void removeBairroCodigo(Bairro **listaBairro, int codBairro);//apagar os sensores (nao fiz o comando do sensor ainda)
-void removeBairroInicio(Bairro **listaBairro); //Terminar, usar para a desolacação de memória
-Bairro * verificaBairro(Bairro *pauxBairro, int codBairro);
+/**/Bairro * alocaBairro(int codigo, char nome[]);
+/**/void insereBairro(Bairro **listaBairro, int codigo, char nome[], int *flag);
+/**/void listaBairro(Bairro *pauxBairro);
+/**/void removeBairroCodigo(Bairro **listaBairro, int codBairro, int *flag);
+void removeBairroInicio(Bairro **listaBairro); //Usar para a desolacação de memória
+/**/Bairro * verificaBairro(Bairro *pauxBairro, int codBairro);
+/**/int verificaBairroNome(Bairro *pauxBairro, char nomeBairro[]);//Usado para nao criar dois bairros com o mesmo nome
 
 //Sensores
-Sensor * alocaSensor(int codigo, int tipo,  int status);
-void insereSensor(Bairro *pauxBairro, int codBairro, int codSensor, int tipo,  int status);
-//void removeSensorCodigo(Bairro *enderecoBairro, int codSensor);//terminar
-
-Sensor * verificaSensor (Sensor *pauxSensor, int codSensor);
+/**/Sensor * alocaSensor(int codigo, int tipo,  int status);
+/**/void insereSensor(Bairro *pauxBairro, int codBairro, int codSensor, int tipo,  int status,int *flag);
+void removeSensorInicio(Bairro *enderecoBairro);
+/**/Sensor * verificaSensor (Sensor *pauxSensor, int codSensor);
+/**/Sensor* verificaSensorGlobal(Bairro *pauxBairro, int codSensor);
+/**/void alteraStatusSensor(Bairro *listaBairros, int codSensor, int novoStatus, int *flag);
+/**/void listaSensor(Sensor *enderecoSensor);
+/**/void listaSensoresPorBairro(Bairro *listaBairro, int codBairro, int *flag);
 
 //Ocorrências
 Ocorrencia * alocaOcorrencia(int codigo, int severidade, char descricao[], int status);

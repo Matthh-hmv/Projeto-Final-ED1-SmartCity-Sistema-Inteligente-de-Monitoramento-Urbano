@@ -1,7 +1,6 @@
 #include "prototipos.h"
 
 //CARREGAR ARQUIVSO txt:
-
 void carregarBairros(Bairro **listaBairros)
 {
 	FILE *arquivoBairros = fopen("entradas/bairros.txt", "r");
@@ -14,9 +13,10 @@ void carregarBairros(Bairro **listaBairros)
 
 	int codBairro;
 	char nomeBairro[50];
+	int flagAux;
 
 	while(fscanf(arquivoBairros, "%d %s", &codBairro, nomeBairro) == 2)
-		insereBairro(listaBairros, codBairro, nomeBairro);
+		insereBairro(listaBairros, codBairro, nomeBairro, &flagAux);
 
 	fclose(arquivoBairros);
 }
@@ -140,14 +140,14 @@ void carregarSensores(Bairro *listaBairros)
 		return;
 	}
 
-	int codSensor, tipoSensor, statusSensor, codBairro;
+	int codSensor, tipoSensor, statusSensor, codBairro, flagAux;
 
 	while(fscanf(arquivoSensores, "%d %d %d %d", &codSensor, &tipoSensor, &statusSensor, &codBairro) == 4)
 	{
 		Bairro *bairroDestino = verificaBairro(listaBairros, codBairro);
 
 		if(bairroDestino != NULL)
-			insereSensor(bairroDestino, codBairro, codSensor, tipoSensor, statusSensor);
+			insereSensor(listaBairros, codBairro, codSensor, tipoSensor, statusSensor, &flagAux);
 	}
 
 	fclose(arquivoSensores);
@@ -447,6 +447,7 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado)
 	printf("Chamado %d finalizado com sucesso! \n", codChamado);
 }
 
+
 void salvaSistema(Bairro *listaBairros, Equipe *listaEquipes)
 {
 	//ATUALIZAR ARQUIVO txt BAIRROS
@@ -655,6 +656,75 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 
 	fprintf(relatorio, "\n");
 
+
+	//relatorio 4
+	fprintf(relatorio, "RELATÓRIO 4: EQUIPE COM MAIS NÚMERO DE ATENDIMENTOS \n");
+	Equipe *pauxE = listaEquipes;
+	Equipe *maisAtendimentos = listaEquipes;
+
+	if(pauxE == NULL)
+		fprintf("Nenhuma equipe cadastrada.\n");
+
+	else
+	{
+		while(pauxE != NULL)
+		{
+			if(pauxE->totalAtendimentos > maisAtendimentos->totalAtendimentos)
+				maisAtendimentos = pauxE;
+
+			pauxE = pauxE->prox;
+		}
+
+		if(maisAtendimentos != NULL && maisAtendimentos->totalAtendimentos > 0)
+			fprintf(relatorio, "%s com %d atendimentos.\n", maisAtendimentos->nome, maisAtendimentos->totalAtendimentos);
+
+		else
+			fprintf(relatorio, "Nenhuma equipe realizou atendimentos ainda.\n");
+	}
+
+	fprintf(relatorio, "\n");
+
+	//relatorio 5
+	fprintf(relatorio, "RELATÓRIO 5: QUANTIDADE DE SENSORES POR BAIRRO \n");
+	pauxB = listaBairros;
+
+	if(pauxB == NULL)
+		fprintf("Nenhum bairro monitorado.\n");
+
+	else
+	{
+		while(pauxB != NULL)
+		{
+			fprintf(relatorio, "Bairro: %s | Quantidade de sensores: %d", pauxB->nome, pauxB->quantidadeSensores);
+			pauxB = pauxB->prox;
+		}
+	}
+
+	fprintf(relatorio, "\n");
+
+	//relatorio 6
+	fprintf(relatorio, "RELATÓRIO 6: QUANTIDADE DE OCORRÊNCIAS POR SEVERIDADE \n");
+
+	int total[4] = {0, 0, 0, 0}; //0 = baixa, 1 = media, 2 = alta, 3 = critivca
+	pauxB = listaBairros;
+
+	while(pauxB != NULL)
+	{
+		total[0] += pauxB->totalPorSeveridade[0];
+		total[1] += pauxB->totalPorSeveridade[1];
+		total[2] += pauxB->totalPorSeveridade[2];
+		total[3] += pauxB->totalPorSeveridade[3];
+
+		pauxB = pauxB->prox;
+	}
+
+	fprintf(relatorio, "Severidade 1: %d\n", total[0]);
+	fprintf(relatorio, "Severidade 1: %d\n", total[1]);
+	fprintf(relatorio, "Severidade 1: %d\n", total[2]);
+	fprintf(relatorio, "Severidade 1: %d\n", total[3]);
+
+	fclose(relatorio);
+	printf("Arquivo relatorio.txt gerado com sucesso!  \n");
 }
 
 

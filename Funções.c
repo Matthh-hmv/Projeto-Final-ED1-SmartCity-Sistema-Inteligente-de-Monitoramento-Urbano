@@ -24,6 +24,7 @@ void carregarBairros(Bairro **listaBairros)
 
 void carregarChamados(Bairro *listaBairros, Equipe *listaEquipes)
 {
+	int flag;
 	FILE *arquivoChamados = fopen("entradas/chamados.txt", "r");
 
 	if(!arquivoChamados)
@@ -52,7 +53,7 @@ void carregarChamados(Bairro *listaBairros, Equipe *listaEquipes)
 			pauxBairro = pauxBairro->prox;
 		}
 		Chamado *novoChamado = alocaChamado(codChamado, priori, statusSensor, OcorrenciaReal);
-		inserirChamadoEquipe(listaEquipes, codEquipe, novoChamado);
+		inserirChamadoEquipe(listaEquipes, codEquipe, novoChamado, &flag);
 	}
 
 	fclose(arquivoChamados);
@@ -69,14 +70,14 @@ void carregarEquipes(Equipe **listaEquipes)
 		return;
 	}
 
-	int cod, espec;
+	int cod, espec, flagAux;
 	char nomeEquipe[50];
 
 
 	while(fscanf(arquivoEquipes, "%d %s %d", &cod, nomeEquipe, &espec) == 3)
 	{
 		Equipe *novo = alocaEquipe(cod, nomeEquipe, espec);
-		inserirEquipe(listaEquipes, novo);
+		inserirEquipe(listaEquipes, novo, &flagAux);
 	}
 
 	fclose(arquivoEquipes);
@@ -93,7 +94,7 @@ void carregarOcorrencias(Bairro *listaBairros)
 		return;
 	}
 
-	int codOcorrencia, sev, statusSensor, codSensor, bairro;
+	int codOcorrencia, sev, statusSensor, codSensor, bairro, flagAux;
 	char desc[100];
 
 	while(fscanf(arquivoOcorrencias, "%d %d %d %d %d %s", &codOcorrencia, &sev, &statusSensor, &codSensor, &bairro, desc) == 6)
@@ -105,7 +106,7 @@ void carregarOcorrencias(Bairro *listaBairros)
 			Sensor *pauxSensor = verificaSensor(bairroDestino->listaSensores, codSensor); //busca o sensor no bairro informado
 
 			if(pauxSensor != NULL)  
-				insereOcorrencia(bairroDestino, &(pauxSensor->listaOcorrencias), codOcorrencia, sev, desc, statusSensor);
+				insereOcorrencia(bairroDestino, &(pauxSensor->listaOcorrencias), codOcorrencia, sev, desc, statusSensor, &flagAux);
 
 
 
@@ -299,6 +300,7 @@ void removeEquipeInicio(Equipe ** listaEquipe)
 	return;		
 }
 
+//Funcoes chamados
 
 Chamado *alocaChamado(int cod, int priori, int statusChamado, Ocorrencia *OcorrenciaReal)
 {
@@ -331,7 +333,7 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 
 	if(eqp == NULL)
 	{
-		printf("equipe nao encntrada!\n");
+		printf("equipe nao encontrada!\n");
 		free(novoChamado);
 		*flag = 0;
 		return;
@@ -388,7 +390,7 @@ void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, in
 	}
 
 	Ocorrencia *OcorrenciaReal = NULL;	
-	int tipoSensor = -1;
+	int tipoSensor = -1, flagInterna;
 
 	Bairro *pauxBairro = listaBairros;
 
@@ -440,10 +442,19 @@ void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, in
 	Chamado *novoChamado = alocaChamado(codChamado, priori, statusSensor, OcorrenciaReal);
 	inserirChamadoEquipe(listaEquipes, equipeCompativel->codigo, novoChamado, &flagInterna);
 
-	OcorrenciaReal->chamado = novoChamado;
+	if(flagInterna == 1)
+	{
+		OcorrenciaReal->chamado = novoChamado;
 
-	printf("Chamado %d gerado automaticamente e atribuido a equipe %s \n", codChamado, equipeCompativel->nome);
-	*flag = 1;
+		printf("Chamado %d gerado automaticamente e atribuido a equipe %s \n", codChamado, equipeCompativel->nome);
+		*flag = 1;
+	}
+
+	else
+	{
+		printf("Nao foi possivel inserir o chamadado na equipe\n");
+		*flag = 0;
+	}
 }
 
 
@@ -497,7 +508,7 @@ void removeChamadoInicio(Chamado **listaChamado)
 	*listaChamado = pauxChamado -> prox;
 	Ocorrencia *pauxOcorrencia = pauxChamado -> ocorrencia;
 	if (pauxOcorrencia -> chamado)
-		pauxOcorrencia -> chamado = NULL
+		pauxOcorrencia -> chamado = NULL;
 	free(pauxChamado);
 	return;	
 }
@@ -516,6 +527,7 @@ void salvaSistema(Bairro *listaBairros, Equipe *listaEquipes)
 			fprintf(arquivoBairros, "%d %s\n", pauxB->codigo, pauxB->nome);
 			pauxB = pauxB->prox;
 		}
+		printf("\nTeste");
 		fclose(arquivoBairros);
 	}
 	else
@@ -663,7 +675,7 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 		{
 			if(pauxS->status == 3)
 			{
-				fprintf(relatorio, "Sensor ID: %d | Tipo: %d no Bairro: %d\n", pauxS->codigo, pauxS->tipo, pauxB->nome);
+				fprintf(relatorio, "Sensor: %d | Tipo: %d no Bairro: %s\n", pauxS->codigo, pauxS->tipo, pauxB->nome);
 				encontrouOff = 1;
 			}
 			pauxS = pauxS->prox;
@@ -900,7 +912,7 @@ void registraLog(const char *operacao, const char *status, const char *dados)
 
 	static int horarioLogico = 1; //static para manter o valor na memoria entre as chamadas da funcao
 
-	fprintf(arquivoLog, "PASSO %d | Operacao: %d | Status: %s | Dados: %s\n", horarioLogico, operacao, status, dados);
+	fprintf(arquivoLog, "PASSO %d | Operacao: %s | Status: %s | Dados: %s\n", horarioLogico, operacao, status, dados);
 
 	horarioLogico++;
 	fclose(arquivoLog);
@@ -911,7 +923,7 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
 {
 	FILE *arquivoSimulacao = fopen("entradas/entrada_simulacao.txt", "r");
 
-	if(arquivoSimulacao)
+	if(arquivoSimulacao == NULL)
 	{
 		printf("Erro ao abrir entradas/entrada_simulacao.txt\n");
         return;
@@ -1000,19 +1012,19 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     		if(codEquipe <= 0)
     		{
     			sprintf(dadosLog, "Codigo de equipe inválido");
-                registrarLog("cadastrarEquipe", "FALHA", dadosLog);
+                registraLog("cadastrarEquipe", "FALHA", dadosLog);
     		}
 
     		if(buscarEquipe(*listaEquipe, codEquipe) != NULL)
     		{
     			sprintf(dadosLog, "Equipe %d ja cadastrada", codEquipe);
-                registrarLog("cadastrarEquipe", "FALHA", dadosLog);
+                registraLog("cadastrarEquipe", "FALHA", dadosLog);
     		}
 
     		if(tipoSensor < 1 || tipoSensor > 5)
     		{
     			sprintf(dadosLog, "Especialidade invalida");
-                registrarLog("cadastrarEquipe", "FALHA", dadosLog);
+                registraLog("cadastrarEquipe", "FALHA", dadosLog);
     		}
 
     		else
@@ -1026,14 +1038,14 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     				if(flagFuncoes == 1)
     				{
     					sprintf(dadosLog, "Codigo: %d, Nome: %s, Especialidade: %d", codEquipe, nomeBairro, tipoSensor);
-                		registrarLog("cadastrarEquipe", "SUCESSO", dadosLog);
+                		registraLog("cadastrarEquipe", "SUCESSO", dadosLog);
     				}
 
     				else
     				{
     					free(novaEquipe);
     					sprintf(dadosLog, "Erro ao inserir equipe");
-                		registrarLog("cadastrarEquipe", "FALHA", dadosLog);
+                		registraLog("cadastrarEquipe", "FALHA", dadosLog);
     				}
     			}
     		}
@@ -1043,7 +1055,7 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     	{
     		fscanf(arquivoSimulacao, "%d %d %d %d %d  %s", &codOcorrencia, &severidade, &statusOcorrencia, &codSensor, &codBairro, descOcorrencia);
     		
-    		Bairro *enderecoBairro = verificaBairro(listaBairro, codBairro);
+    		Bairro *enderecoBairro = verificaBairro(*listaBairro, codBairro);
 
     		if(enderecoBairro != NULL)
     		{
@@ -1056,7 +1068,7 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     				if(flagFuncoes == 1)
     				{
     					sprintf(dadosLog, "ID: %d, Sensor: %d, Gravidade: %d", codOcorrencia, codSensor, severidade);
-                        registrarLog("registrarOcorrencia", "SUCESSO", dadosLog);
+                        registraLog("registrarOcorrencia", "SUCESSO", dadosLog);
 
                         if(severidade == 4 && statusOcorrencia == 1)
                         {
@@ -1078,11 +1090,8 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
                         			alteraStatusSensor(*listaBairro, codSensor, 2, &flagStatus);
 
                         			sprintf(dadosLog, "Chamado %d gerado. Sensor %d em manutencao", codChamadoAutomatico, codSensor);
-                        			registrarLog("ChamadoAutomatico", "SUCESSO", dadosLog);
+                        			registraLog("ChamadoAutomatico", "SUCESSO", dadosLog);
                         		}
-
-                        		else
-                        			free(novoChamado);
                         	}
                         }
     				}
@@ -1091,14 +1100,14 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     			else
     			{
     				sprintf(dadosLog, "Sensor %d nao localizado no bairro %d", codSensor, codBairro);
-                    registrarLog("registrarOcorrencia", "FALHA", dadosLog);
+                    registraLog("registrarOcorrencia", "FALHA", dadosLog);
     			}
     		}
 
     		else
     		{
     			sprintf(dadosLog, "Bairro %d nao existe", codBairro);
-            	registrarLog("registrarOcorrencia", "FALHA", dadosLog);
+            	registraLog("registrarOcorrencia", "FALHA", dadosLog);
     		}
     	}
 
@@ -1109,7 +1118,7 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     		if(verificaChamado(*listaEquipe, codChamado) != NULL)
     		{
     			sprintf(dadosLog, "Chamado %d ja existente", codChamado);
-                registrarLog("gerarChamado", "FALHA", dadosLog);
+                registraLog("gerarChamado", "FALHA", dadosLog);
     		}
 
     		else
@@ -1119,13 +1128,13 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     			if(flagFuncoes == 1)
     			{
     				sprintf(dadosLog, "Cod: %d, Ocorrencia: %d", codChamado, codOcorrencia);
-                	registrarLog("gerarChamado", "SUCESSO", dadosLog);
+                	registraLog("gerarChamado", "SUCESSO", dadosLog);
     			}
 
     			else
     			{
     				sprintf(dadosLog, "Erro ao vincular o chamado %d", codChamado);
-                	registrarLog("gerarChamado", "FALHA", dadosLog);
+                	registraLog("gerarChamado", "FALHA", dadosLog);
     			}
     		}
     	}
@@ -1139,25 +1148,25 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
             if(flagFuncoes == 1)
             {
             	sprintf(dadosLog, "Chamado: %d -> Nova Equipe: %d", codChamado, codEquipe);
-                registrarLog("associarEquipe", "SUCESSO", dadosLog);
+                registraLog("associarEquipe", "SUCESSO", dadosLog);
             }
 
             else
             {
             	sprintf(dadosLog, "Nao foi possivel associar o Chamado %d a Equipe %d", codChamado, codEquipe);
-                registrarLog("associarEquipe", "FALHA", dadosLog);
+                registraLog("associarEquipe", "FALHA", dadosLog);
             }
     	}
 
 
-    	if(strcmp(arquivoBairros, "alteraStatusSensor") == 0)
+    	if(strcmp(comandoSimulacao, "alterarStatusSensor") == 0)
     	{
     		fscanf(arquivoSimulacao, "%d %d %d", &codSensor, &codBairro, &statusSensor);
 
     		if(statusSensor < 1 || statusSensor > 3)
     		{
     			sprintf(dadosLog, "Status invalido");
-                registrarLog("alterarStatusSensor", "FALHA", dadosLog);
+                registraLog("alterarStatusSensor", "FALHA", dadosLog);
     		}
 
     		else
@@ -1167,8 +1176,8 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
 
     			if(flagFuncoes == 1 && sensorAlvo != NULL)
     			{
-    				sprintf(dadosLog, "Sensor: %d, Novo Status: %d", codSensor statusSensor);
-                	registrarLog("alterarStatusSensor", "SUCESSO", dadosLog);
+    				sprintf(dadosLog, "Sensor: %d, Novo Status: %d", codSensor, statusSensor);
+                	registraLog("alterarStatusSensor", "SUCESSO", dadosLog);
 
                 	if(statusSensor == 3)
                 	{
@@ -1183,11 +1192,11 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
                 			if(flagAuto == 1)
                 			{
                 				sprintf(dadosLog, "Chamado %d aberto por perda de sinal", codChamadoAutomatico);
-                				registrarLog("ChamadoAutomatico", "FALHA", dadosLog);
+                				registraLog("ChamadoAutomatico", "FALHA", dadosLog);
                 			}
 
-                			else
-                				free(novoChamado);
+                			//else
+                			//	free(novoChamado);
                 		}
 
 
@@ -1197,76 +1206,62 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     			else
     			{
     				sprintf(dadosLog, "Sensor %d nao encontrado", codSensor);
-                	registrarLog("alterarStatusSensor", "FALHA", dadosLog);
+                	registraLog("alterarStatusSensor", "FALHA", dadosLog);
     			}
     		}
     	}
 
     	if(strcmp(comandoSimulacao, "finalizarChamado") == 0)
     	{
-    		scanf(arquivoSimulacao, "%d", &codChamado);
+    		fscanf(arquivoSimulacao, "%d", &codChamado);
     		finalizarChamado(*listaEquipe, codChamado, &flagFuncoes);
 
     		if(flagFuncoes == 1)
     		{
     			sprintf(dadosLog, "Chamado %d finalizado", codChamado);
-                registrarLog("finalizarChamado", "SUCESSO", dadosLog);
+                registraLog("finalizarChamado", "SUCESSO", dadosLog);
     		}
 
     		else
     		{
     			sprintf(dadosLog, "Chamado %d nao localizado", codChamado);
-                registrarLog("finalizarChamado", "FalHA", dadosLog);
+                registraLog("finalizarChamado", "FalHA", dadosLog);
     		}
     	}
 
 
     	if(strcmp(comandoSimulacao, "listaSensoresBairro") == 0)
     	{
-    		scanf(arquivoSimulacao, "%d", &codBairro);
+    		fscanf(arquivoSimulacao, "%d", &codBairro);
 
     		Bairro *bairroAlvo = verificaBairro(*listaBairro, codBairro);
 
     		if(bairroAlvo == NULL)
     		{
     			sprintf(dadosLog, "Bairro %d nao localizado", codBairro);
-                registrarLog("listarSensoresBairro", "FALHA", dadosLog);
+                registraLog("listarSensoresBairro", "FALHA", dadosLog);
     		}
 
     		else
     		{
-    			printf("\nSensores no Bairro %d: %s \n", bairroAlvo->nome);
+    			printf("\nSensores no Bairro %d: %s \n", codBairro, bairroAlvo->nome);
     			listaSensoresPorBairro(*listaBairro, codBairro, &flagFuncoes);
 
     			sprintf(dadosLog, "Bairro: %d, Nome: %s", codBairro, bairroAlvo->nome);
-                registrarLog("listarSensoresBairro", "SUCESSO", dadosLog);
+                registraLog("listarSensoresBairro", "SUCESSO", dadosLog);
     		}
     	}
 
 
     	if(strcmp(comandoSimulacao, "listarOcorrencias") == 0)
     	{
-    		fscanf(arquivoSimulacao, "%d", &codSensor);
-
-    		Sensor *sensorAlvo = verificaSensorGlobal(*listaBairro, codSensor);
-
-    		if(sensorAlvo == NULL)
-    		{
-    			sprintf(dadosLog, "Sensor %d nao encontrado para listar ocorrencias", codSensor);
-                registrarLog("listarOcorrencias", "FALHA", dadosLog);
-                printf("\nSensor %d nao encontrado\n", codSensor);
-    		}
-
-    		else
-    		{
-    			listarOcorrencias(sensorAlvo, &flagFuncoes);
-    			sprintf(dadosLog, "Sensor %d", codSensor);
-                registrarLog("listarOcorrencias", "SUCESSO", dadosLog);
-    		}
+    		listaOcorrencias(*listaBairro, &flagFuncoes);
+    		sprintf(dadosLog, "Sensor %d", codSensor);
+            registraLog("listarOcorrencias", "SUCESSO", dadosLog);
     	}
     }
 
-    registrarLog("FIM", "SUCESSO", "Arquivo de simulacao automatica chegou ao fim.");
+    registraLog("FIM", "SUCESSO", "Arquivo de simulacao automatica chegou ao fim.");
     fclose(arquivoSimulacao);
 
     salvaSistema(*listaBairro, *listaEquipe);
@@ -1325,7 +1320,7 @@ void insereBairro(Bairro **listaBairro, int codigo, char nome[], int *flag)
 	return;
 }
 
-void listaBairro(Bairro *pauxBairro)
+void funListaBairro(Bairro *pauxBairro)
 {
 	if (pauxBairro == NULL)
 	{
@@ -1334,7 +1329,7 @@ void listaBairro(Bairro *pauxBairro)
 	}
 	while(pauxBairro != NULL)
 	{
-		printf("\nCodigo: %d, Bairro %s", pauxBairro->codigo, pauxBairro->nome);
+		printf("\nCodigo: %d - Bairro: %s", pauxBairro->codigo, pauxBairro->nome);
 		pauxBairro = pauxBairro -> prox;
 	}
 	return;
@@ -1449,7 +1444,7 @@ Sensor * alocaSensor(int codigo, int tipo,  int status)
 
 void insereSensor(Bairro *listaBairro, int codBairro, int codSensor, int tipo,  int status, int *flag)//fazer verificacao do endereco do bairro na main
 {
-	Bairro * enderecoBairro = verificaBairro(listaBairro, codBairro)
+	Bairro * enderecoBairro = verificaBairro(listaBairro, codBairro);
 	if(enderecoBairro == NULL)
 	{
         *flag = 0;
@@ -1567,7 +1562,7 @@ void listaSensor(Sensor *enderecoSensor)
 
 void listaSensoresPorBairro(Bairro *listaBairro, int codBairro, int *flag)
 {
-    Bairro * enderecoBairro = verificaBairro(listaBairro, codBairro)
+    Bairro * enderecoBairro = verificaBairro(listaBairro, codBairro);
 	if(enderecoBairro == NULL)
 	{
         *flag = 0;
@@ -1608,11 +1603,14 @@ Ocorrencia * alocaOcorrencia(int codigo, int severidade, char descricao[], int s
 	return novo;
 }
 
-void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codigo, int severidade, char descricao[], int status) //O ponteiro listaOcorrencia deve ser do sensor a ser inserido, passar pela main;
+void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codigo, int severidade, char descricao[], int status, int *flag) //O ponteiro listaOcorrencia deve ser do sensor a ser inserido, passar pela main;
 {
 	Ocorrencia *novo = alocaOcorrencia(codigo, severidade, descricao, status);
 	if (novo == NULL)
+	{	
+		*flag = 0;
 		return;
+	}
 	enderecoBairro -> quantidadeOcorrencias++;
 	switch (novo -> severidade)
 	{
@@ -1624,12 +1622,14 @@ void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int 
 	if (*listaOcorrencia == NULL)
 	{
 		*listaOcorrencia = novo;
+		*flag = 1;
 		return;
 	}
 	Ocorrencia *pauxOcorrencia = *listaOcorrencia;
 	while(pauxOcorrencia -> prox != NULL)
 		pauxOcorrencia = pauxOcorrencia -> prox;
 	pauxOcorrencia -> prox = novo;
+	*flag = 1;
 	return;
 } //Lembrar de verificar se o bairro existe na main, aí não terá como cadastrar em NULL
 
@@ -1749,7 +1749,7 @@ void listaOcorrencias(Bairro *pauxBairro, int *flag)
 		
 void liberarMemoria (Bairro **listaBairro, Equipe **listaEquipe)
 {
-	while(*listaBairros)
+	while(*listaBairro)
 		removeBairroInicio(listaBairro);
 	while(*listaEquipe)
 		removeEquipeInicio(listaEquipe);

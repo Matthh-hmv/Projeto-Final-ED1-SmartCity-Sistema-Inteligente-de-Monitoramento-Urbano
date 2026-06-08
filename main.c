@@ -14,7 +14,7 @@ void main()
 
     printf("Bem vindo ao sistema de controle de SmartCity's\n");
     do{
-        printf("\n1 - Carregar arquivos \n2 - Entrada manual de Dados\n3 - Simulação via arquivo de entrada\n0 - Sair do programa");
+        printf("\n1 - Carregar arquivos \n2 - Entrada manual de Dados\n3 - Simulação via arquivo de entrada\n0 - Sair do programa\n");
         scanf("%d", &escMenu);
         getchar();
         switch(escMenu)
@@ -34,6 +34,7 @@ void main()
                     carregarSensores(listaBairro);
                     carregarOcorrencias(listaBairro);
                     carregarChamados(listaBairro, listaEquipe);
+                    printf("\nArquivos Carregados!\n");
                     flagCarregarArquivos = 1;
                 }
 
@@ -50,7 +51,7 @@ void main()
                     break;
                 }
                 do{
-                    printf("\n1 - Cadastro de Bairros\n2 - Cadastro de Sensores\n3 - Registro de ocorrências\n4 - Geracao de chamados\n5 - Gerenciamento de Equipes\n0 - Voltar  ao menu anterior\n");
+                    printf("\n\n1 - Cadastro de Bairros\n2 - Cadastro de Sensores\n3 - Registro de ocorrências\n4 - Geracao de chamados\n5 - Gerenciamento de Equipes\n0 - Voltar  ao menu anterior\n");
                     scanf("%d", &escFuncionalidades);
                     getchar();
 
@@ -90,15 +91,12 @@ void main()
                                         printf("\nJa existe bairro com esse nome!");
                                         break;
                                     }
-                                    insereBairro(&listaBairros, codBairro, nomeBairro, &flagFuncoes);
+                                    insereBairro(&listaBairro, codBairro, nomeBairro, &flagFuncoes);
                                     
                                     if (flagFuncoes == 1)
                                     {
                                         printf("\nBairro cadastrado");
                                         salvaSistema(listaBairro, listaEquipe);
-
-                                        sprintf(dadosLog, "Codigo: %d, Nome: %s", codBairro,nomeBairro);
-                                        registrarLog("cadastrarBairro", "SUCESSO", dadosLog);
                                     }
 
                                     
@@ -122,7 +120,7 @@ void main()
                                         if(codBairro <= 0)
                                             printf("\nDigite um codigo maior que 0!");
 
-                                    } while(codBairro <= 0);
+                                    }while(codBairro <= 0);
 
                                     enderecoBairro = verificaBairro(listaBairro, codBairro);
 
@@ -143,7 +141,7 @@ void main()
 
                                 case 3:
                                 {
-                                    listaBairros(listaBairro); //Faz a verificacao se a lista de bairros esta vazia na funcao
+                                    funListaBairro(listaBairro); //Faz a verificacao se a lista de bairros esta vazia na funcao
                                 }break;
 
 
@@ -162,7 +160,7 @@ void main()
                                         if(codBairro <= 0)
                                             printf("\nDigite um codigo maior que 0!");
 
-                                    } while(codBairro <= 0);
+                                    }while(codBairro <= 0);
 
                                     removeBairroCodigo(&listaBairro, codBairro, &flagFuncoes);
 
@@ -170,17 +168,10 @@ void main()
                                     {
                                         printf("\nBairro %d removido com sucesso!", codBairro);
                                         salvaSistema(listaBairro, listaEquipe);
-
-                                        sprintf(dadosLog, "Codigo: %d", codBairro);
-                                        registrarLog("removeBairro", "SUCESSO", dadosLog);
                                     }
 
                                     else
-                                    {
                                         printf("\nNenhum bairro foi removido!");
-                                        sprintf(dadosLog, "Erro: restricao de sensores vinculados no bairro %d", codBairro);
-                                        registrarLog("removeBairro", "FALHA", dadosLog);
-                                    }
 
                                 }break;
 
@@ -211,7 +202,7 @@ void main()
                                 {
                                     if (listaBairro == NULL)
                                     {
-                                        printf("\nCadastre algum bairro antes de inserir um sensor\n!");
+                                        printf("\nCadastre algum bairro antes de inserir um sensor!\n");
                                         break;
                                     }  
                                     do{
@@ -263,20 +254,19 @@ void main()
                                     {
                                         printf("\nSensor Registrado!");
                                         salvaSistema(listaBairro, listaEquipe);
-
-                                        sprintf(dadosLog, "cod: %d, tipo: %d, Bairro: %d", codSensor,tipoSensor, codBairro);
-                                        registrarLog("cadastrarSensor", "SUCESSO", dadosLog);
                                     }
                                     else
-                                    {
                                         printf("\nErro! Sensor nao registrado");
-                                        registrarLog("cadastrarSensor", "FALHA", dadosLog);
-                                    }
                                 }break;
 
 
                                 case 2:
                                 {
+                                    if (listaBairro == NULL)
+                                    {
+                                        printf("\nCadastre algum bairro antes de alterar o status de um sensor!\n");
+                                        break;
+                                    }  
                                     do{
                                         printf("\nDigite o codigo do sensor que vai ser mudado o status: ");
                                         scanf("%d", &codSensor);
@@ -307,19 +297,13 @@ void main()
                                         printf("\nStatus alterado!");
                                         salvaSistema(listaBairro, listaEquipe);
 
-                                        sprintf(dadosLog, "cod: %d, Status: %d", codSensor, statusSensor);
-                                        registrarLog("alteraStatusSensor", "SUCESSO", dadosLog);
-
                                         if(statusSensor == 3)
                                         {
                                             int codChamadoAutomatico = 9000 + codSensor;
                                             if(verificaChamado(listaEquipe, codChamadoAutomatico) == NULL)
                                             {
                                                 Chamado *novoChamado = alocaChamado(codChamadoAutomatico, 3, 1, NULL);
-                                                inserirChamadoEquipe(listaEquipe, enderecoSensor->tipo, novoChamado);
-
-                                                sprintf(dadosLog, "Chamado %d gerado automaticamente para o Sensor %d (offline)", codChamadoAutomatico, codSensor);
-                                                registrarLog("chamadoAutomatico", "SUCESSO", dadosLog);
+                                                inserirChamadoEquipe(listaEquipe, enderecoSensor->tipo, novoChamado, &flagFuncoes);
 
                                                 printf("\nSensor %d ficou offline! Chamado %d gerado para a equipe de especialidade %d.", codSensor, codChamadoAutomatico, enderecoSensor->tipo);
 
@@ -328,15 +312,20 @@ void main()
                                     }
                                     
                                     else
-                                    {
                                         printf("\nErro! Status nao alterado");
-                                        registrarLog("alteraStatusSensor", "FALHA", dadosLog);
-                                    }
+
                                     enderecoSensor = NULL;
+
                                 }break;
+
 
                                 case 3:
                                 {
+                                    if (listaBairro == NULL)
+                                    {
+                                        printf("\nCadastre algum bairro antes de buscar um sensor!\n");
+                                        break;
+                                    }  
                                     do{
                                         printf("\nDigite o codigo do sensor que vai ser buscado: ");
                                         scanf("%d", &codSensor);
@@ -344,7 +333,7 @@ void main()
 
                                         if (codSensor < 1)
                                             printf("\nNao existe sensor com codigo negativo");
-                                    } while (codSensor < 1);
+                                    } while(codSensor < 1);
 
                                     enderecoSensor = verificaSensorGlobal(listaBairro, codSensor);
 
@@ -360,6 +349,11 @@ void main()
 
                                 case 4:
                                 {
+                                    if (listaBairro == NULL)
+                                    {
+                                        printf("\nCadastre algum bairro antes de listar seus sensores!\n");
+                                        break;
+                                    }  
                                     do{
                                         printf("\nDigite o codigo do bairro para ser listado: ");
                                         scanf("%d", &codBairro);
@@ -367,14 +361,14 @@ void main()
 
                                         if(codBairro <= 0)
                                             printf("\nDigite um codigo maior que 0!");
-                                    } while(codBairro <= 0);
+                                    }while(codBairro <= 0);
                                     
                                     if (verificaBairro(listaBairro, codBairro) == NULL)
                                     {
                                         printf("\nNao existe bairro com esse codigo");
                                         break;
                                     }
-                                    listaSensoresPorBairro(listaBairro, codBairro, flagFuncoes);
+                                    listaSensoresPorBairro(listaBairro, codBairro, &flagFuncoes);
                                 }break;
 
 
@@ -388,7 +382,7 @@ void main()
                                 {
                                     printf("\nDigite uma opcao valida!");
                                 }break;
-
+                            }
                         }break;
 
 
@@ -437,7 +431,7 @@ void main()
                                 printf("\n1 - Baixa \n2 - Media \n3 - Alta \n4 - Critica \nDigite a severidade: ");
                                 scanf("%d", &severidade);
                                 getchar();
-                            } while (severidade < 1 || severidade > 4)
+                            } while (severidade < 1 || severidade > 4);
 
                             printf("\nDigite a descricao: ");
                             fgets(descOcorrencia, 100, stdin);
@@ -446,7 +440,7 @@ void main()
                             do{
                             printf("\n1 - Ativa \n0 - Resolvida \nDigite o status: ");
                             scanf("%d", &statusOcorrencia);
-                            } while (statusOcorrencia < 0 || statusOcorrencia > 1)
+                            } while (statusOcorrencia < 0 || statusOcorrencia > 1);
 
                             insereOcorrencia(enderecoBairro, &(enderecoSensor->listaOcorrencias), codOcorrencia, severidade, descOcorrencia, statusOcorrencia, &flagFuncoes);
                             
@@ -455,9 +449,6 @@ void main()
                             {
                                 printf("\nOcorrencia registrada com sucesso!");
                                 salvaSistema(listaBairro, listaEquipe);
-
-                                sprintf(dadosLog, "Cod: %d, Sensor: %d, Severidade: %d", codOcorrencia, codSensor, severidade);
-                                registrarLog("registrarOcorrenciaManual", "SUCESSO", dadosLog);
 
                                 if(severidade == 4 && statusOcorrencia == 1)
                                 {
@@ -476,9 +467,6 @@ void main()
                                             int flagMudaStatus;
                                             alteraStatusSensor(listaBairro, codSensor, 2, &flagMudaStatus);
 
-                                            sprintf(dadosLog, "Chamado %d gerado automaticamente. Sensor %d movido para Manutencao", codChamadoAutomatico, codSensor);
-                                            registrarLog("chamadoAutomatico", "SUCESSO", dadosLog);
-
                                             printf("\nOcorrencia critica detectada! Chamado %d gerado para a equipe %d. Sensor %d movido para Manutencao", codChamadoAutomatico, enderecoSensor->tipo, codSensor);
                                         }
 
@@ -489,10 +477,7 @@ void main()
                             }
 
                             else
-                            {
                                 printf("\nErro! Status nao alterado");
-                                registrarLog("alteraStatusSensor", "FALHA", dadosLog);
-                            }
 
                             enderecoBairro = NULL;
                             enderecoSensor = NULL;
@@ -563,8 +548,6 @@ void main()
                                         printf("\nChamado gerado com sucesso!");
 
                                         salvaSistema(listaBairro, listaEquipe);
-                                        sprintf(dadosLog, "Cod: %d, Ocorrencia: %d, Prioridade: %d", codChamado, codOcorrencia, prioridade);
-                                        registrarLog("gerarChamadoManual", "SUCESSO", dadosLog);
                                     }
 
                                     else
@@ -595,9 +578,6 @@ void main()
                                         {
                                             printf("\nChamado finalizado com sucesso!");
                                             salvaSistema(listaBairro, listaEquipe);
-
-                                            sprintf(dadosLog, "Chamado %d finalizado", codChamado);
-                                            registrarLog("finalizarChamadoManual", "SUCESSO", dadosLog);
                                         }
 
                                         else
@@ -664,9 +644,6 @@ void main()
                                         {
                                             printf("\nEquipe %s cadastrada com sucesso!", nomeBairro);
                                             salvaSistema(listaBairro, listaEquipe);
-
-                                            sprintf(dadosLog, "Codigo: %d, Nome: %s, Especialidade: %d", codChamado, nomeBairro, tipoSensor);
-                                            registrarLog("cadastrarEquipeManual", "SUCESSO", dadosLog);
                                         }
 
                                         else
@@ -693,7 +670,7 @@ void main()
                                     else
                                     {
                                         printf("\nEquipe: %s | Codigo: %d", achouEqp->nome, achouEqp->codigo);
-                                        printf("\nEspecialidade: %d", achouEqp->especialidade);
+/*Transformar em char*/                 printf("\nEspecialidade: %d", achouEqp->especialidade);
                                         printf("\nTotal de atendimentos concluidos: %d", achouEqp->totalAtendimentos);
                                     }
                                 }break;
@@ -716,16 +693,13 @@ void main()
                                     associarEquipe(listaEquipe, codChamado, codSensor, &flagFuncoes);
 
                                     if(flagFuncoes == 1)
-                                    {
                                         salvaSistema(listaBairro, listaEquipe);
 
-                                        sprintf(dadosLog, "Chamado %d migrado para Equipe %d", codChamado, codSensor);
-                                        registrarLog("associarEquipeManual", "SUCESSO", dadosLog);
-                                    }
                                     else
                                         printf("\nErro ao associar equipe");
 
                                 }break;
+
 
                                 case 0:
                                 {
@@ -771,9 +745,10 @@ void main()
             case 0:
             {
                 //Desaloca todos os ponteiros, a parte de salvamento é dentro das funções
-                salvaSistema(listaBairro, listaEquipe)
+                if (flagCarregarArquivos == 1)
+                    salvaSistema(listaBairro, listaEquipe);
                 liberarMemoria(&listaBairro, &listaEquipe);
-            }break;
+            }break; 
 
             default:
             {
@@ -785,3 +760,4 @@ void main()
     }while (escMenu != 0);
 
 }
+

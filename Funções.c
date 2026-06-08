@@ -470,6 +470,20 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado, int *flag)
 	*flag = 1;
 }
 
+void removeChamadoInicio(Chamado **listaChamado)
+{
+	if (*listaChamado == NULL)
+	{
+		return;
+	}
+	Chamado *pauxChamado = *listaChamado;
+	*listaChamado = pauxChamado -> prox;
+	Ocorrencia *pauxOcorrencia = pauxChamado -> ocorrencia;
+	if (pauxOcorrencia -> chamado)
+		pauxOcorrencia -> chamado = NULL
+	free(pauxChamado);
+	return;	
+}
 
 void salvaSistema(Bairro *listaBairros, Equipe *listaEquipes)
 {
@@ -1136,12 +1150,6 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     printf("\nSimulcao automatica concluida com sucesso!\n");
 }
 
-
-//MATHEUS
-
-
-//Fazer chamado automatico dependendo da severidade ou offline do sensor (precisa da funcao do chamado)
-
 //Funções Bairro
 Bairro * alocaBairro(int codigo, char nome[])
 {
@@ -1154,6 +1162,7 @@ Bairro * alocaBairro(int codigo, char nome[])
 	novo -> totalPorSeveridade[0] = 0;
 	novo -> totalPorSeveridade[1] = 0;
 	novo -> totalPorSeveridade[2] = 0;
+	novo -> totalPorSeveridade[3] = 0;
 	novo -> quantidadeSensores = 0;
 	novo -> listaSensores = NULL;
 	novo -> prox = NULL;
@@ -1426,11 +1435,11 @@ void listaSensor(Sensor *enderecoSensor)
     case 2: strcpy(statusSensorChar, "Manutencao");break;
     case 3: strcpy(statusSensorChar, "Offline");break;
     }
-    printf("\n=================================");
+    printf("\n---------------------------------");
     printf("\nSensor cod - %d", enderecoSensor -> codigo);
     printf("\nTipo - %s", tipoSensorChar);
     printf("\nStatus - %s", statusSensorChar);
-    printf("\n=================================");
+    printf("\n---------------------------------");
 }
 
 void listaSensoresPorBairro(Bairro *listaBairro, int codBairro, int *flag)
@@ -1487,6 +1496,7 @@ void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int 
 		case 1: enderecoBairro -> totalPorSeveridade [0]++; break;
 		case 2: enderecoBairro -> totalPorSeveridade [1]++; break;
 		case 3: enderecoBairro -> totalPorSeveridade [2]++; break;	
+		case 4: enderecoBairro -> totalPorSeveridade [3]++; break;
 	}
 	if (*listaOcorrencia == NULL)
 	{
@@ -1500,56 +1510,7 @@ void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int 
 	return;
 } //Lembrar de verificar se o bairro existe na main, aí não terá como cadastrar em NULL
 
-void removeOcorrenciaCodigo(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codOcorrencia) //Ja faz com que o ponteiro da ocorrencia do chamado seja setado como nulo
-{
-	Ocorrencia *pauxOcorrencia = *listaOcorrencia;
-	if (pauxOcorrencia == NULL)
-	{
-		printf("\nLista de ocorrências deste sensor está vazia!");
-		return;
-	}
-	Ocorrencia *enderecoOcorrencia = verificaOcorrencia(*listaOcorrencia, codOcorrencia); 
-	if (enderecoOcorrencia == NULL)
-	{
-		printf("\nNão existe ocorrencia com esse codigo nesse sensor!");
-		return;
-	} //Tratamento de erros
-	enderecoBairro -> quantidadeOcorrencias--;
-	if (pauxOcorrencia == enderecoOcorrencia )
-	{
-		*listaOcorrencia = pauxOcorrencia -> prox;
-		if(pauxOcorrencia -> chamado)
-			(pauxOcorrencia -> chamado) -> ocorrencia = NULL;
-		switch (pauxOcorrencia -> severidade)
-		{
-			case 1: enderecoBairro -> totalPorSeveridade [0]--; break;
-			case 2: enderecoBairro -> totalPorSeveridade [1]--; break;
-			case 3: enderecoBairro -> totalPorSeveridade [2]--; break;	
-		}
-		free(pauxOcorrencia);
-		return;
-	}//Remocao se for a primeira ocorrencia
 
-	while(pauxOcorrencia -> prox != NULL)
-	{
-		if (pauxOcorrencia -> prox  == enderecoOcorrencia)
-		{
-			pauxOcorrencia -> prox = enderecoOcorrencia -> prox;
-			if (enderecoOcorrencia -> chamado)	
-				(enderecoOcorrencia -> chamado) -> ocorrencia = NULL;
-			switch (enderecoOcorrencia -> severidade)
-			{
-				case 1: enderecoBairro -> totalPorSeveridade [0]--; break;
-				case 2: enderecoBairro -> totalPorSeveridade [1]--; break;
-				case 3: enderecoBairro -> totalPorSeveridade [2]--; break;	
-			}
-			free(enderecoOcorrencia);
-			return;
-		}	
-		pauxOcorrencia = pauxOcorrencia -> prox;
-	}//Remocao no inicio e no fim
-
-} //Usado so para remover as ocorrencias quando um sensor for apagado ou na liberacao final de memoria
 
 void removeOcorrenciaInicio(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia)//Ja faz com que o ponteiro da ocorrencia do chamado seja setado como nulo
 {
@@ -1567,7 +1528,8 @@ void removeOcorrenciaInicio(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia
 	{
 		case 1: enderecoBairro -> totalPorSeveridade [0]--; break;
 		case 2: enderecoBairro -> totalPorSeveridade [1]--; break;
-		case 3: enderecoBairro -> totalPorSeveridade [2]--; break;	
+		case 3: enderecoBairro -> totalPorSeveridade [2]--; break;
+		case 4: enderecoBairro -> totalPorSeveridade [3]--; break;	
 	}
 	free(pauxOcorrencia);
 	return;
@@ -1584,4 +1546,91 @@ Ocorrencia * verificaOcorrencia(Ocorrencia *pauxOcorrencia, int codOcorrencia) /
 	return NULL;
 }
 
+Ocorrencia* verificaOcorrenciaGlobal(Bairro *pauxBairro, int codOcorrencia)
+{
+    while (pauxBairro != NULL)
+    {
+        Sensor *pauxSensor = pauxBairro->listaSensores;
+        while (pauxSensor != NULL)
+        {
+            // Usamos a sua função original para procurar dentro DESTE sensor específico!
+            Ocorrencia *achou = verificaOcorrencia((Ocorrencia*)pauxSensor->listaOcorrencias, codOcorrencia);
+            
+            // Se encontrou a ocorrência neste sensor, retorna o endereço dela imediatamente
+            if (achou != NULL)
+            {
+                return achou; 
+            }
 
+            pauxSensor = pauxSensor->prox; // Avança para o próximo sensor
+        }
+
+        pauxBairro = pauxBairro->prox; // Avança para o próximo bairro
+    }
+    
+    return NULL; // Se percorreu tudo e não achou, retorna NULL
+}
+
+
+
+void listaOcorrencia(Ocorrencia *enderecoOcorrencia)
+{
+    char severidadeChar[20];
+    
+    // Traduz a severidade (Exemplo: 1 - Baixa, 2 - Média, 3 - Alta)
+    switch(enderecoOcorrencia->severidade)
+    {
+        case 1: strcpy(severidadeChar, "Baixa"); break;
+        case 2: strcpy(severidadeChar, "Media"); break;
+        case 3: strcpy(severidadeChar, "Alta"); break;
+        case 4:	strcpy(severidadeChar, "Crítica"); break;
+    }
+    printf("\nOcorrência - %d, Severidade - %s", enderecoOcorrencia->codigo, severidadeChar);
+    printf("\nDescrição: %s", enderecoOcorrencia->descricao);
+}
+
+void listaOcorrencias(Bairro *pauxBairro, int *flag) 
+{
+    if (pauxBairro == NULL)
+    {
+        *flag = 0;
+        return;
+    }
+    *flag = 0;//Nao tem ocorrencias no sistema
+    int encontrouAlguma = 0; 
+    while (pauxBairro != NULL)
+    {
+        Sensor *pauxSensor = pauxBairro->listaSensores;
+
+        while (pauxSensor != NULL)
+        {
+            Ocorrencia *pauxOcorrencia = (Ocorrencia*) pauxSensor->listaOcorrencias;
+
+            while (pauxOcorrencia != NULL)
+            {
+                
+                if (pauxOcorrencia == (Ocorrencia*) pauxSensor->listaOcorrencias)
+                {
+                    printf("\n\n Bairro: %s Sensor : %d", pauxBairro->nome, pauxSensor->codigo);
+                }
+
+                listaOcorrencia(pauxOcorrencia);
+                *flag = 1; // Ativa a flag informando que o sistema não está vazio
+                pauxOcorrencia = pauxOcorrencia->prox; 
+            }
+
+            pauxSensor = pauxSensor->prox; 
+        }
+        pauxBairro = pauxBairro->prox; 
+    }
+}
+		
+void liberarMemoria (Bairro **listaBairro, Equipe **listaEquipe)
+{
+	while(*listaBairros)
+		removeBairroInicio(listaBairro);
+	while(*listaEquipe)
+		removeEquipeInicio(listaEquipe);
+	return;
+
+}

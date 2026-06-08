@@ -132,11 +132,11 @@ void main()
                                         break;
                                     }
 
-                                    printf("\n=================================");
+                                    printf("\n  ---------------------------------");
                                     printf("\nBairro %s - cod: %d", enderecoBairro->nome, enderecoBairro->codigo);
                                     printf("\nQuantidade de ocorrências: %d", enderecoBairro->quantidadeOcorrencias);
                                     printf("\nQuantidade de sensores: %d", enderecoBairro->quantidadeSensores);
-                                    printf("\n=================================");
+                                    printf("\n  ---------------------------------");
                                     enderecoBairro = NULL;
                                 } break;
 
@@ -433,16 +433,20 @@ void main()
                             printf("\nDigite o codigo da ocorrencia: ");
                             scanf("%d", &codOcorrencia);
 
-                            printf("\n1 - Baixa \n2 - Media \n3 - Alta \n4 - Critica \nDigite a severidade: ");
-                            scanf("%d", &severidade);
-                            getchar();
+                            do {
+                                printf("\n1 - Baixa \n2 - Media \n3 - Alta \n4 - Critica \nDigite a severidade: ");
+                                scanf("%d", &severidade);
+                                getchar();
+                            } while (severidade < 1 || severidade > 4)
 
                             printf("\nDigite a descricao: ");
                             fgets(descOcorrencia, 100, stdin);
                             descOcorrencia[strcspn(descOcorrencia, "\n")] = '\0';
 
+                            do{
                             printf("\n1 - Ativa \n0 - Resolvida \nDigite o status: ");
                             scanf("%d", &statusOcorrencia);
+                            } while (statusOcorrencia < 0 || statusOcorrencia > 1)
 
                             insereOcorrencia(enderecoBairro, &(enderecoSensor->listaOcorrencias), codOcorrencia, severidade, descOcorrencia, statusOcorrencia, &flagFuncoes);
                             
@@ -571,7 +575,7 @@ void main()
                                 {
                                     if(listaEquipe == NULL)
                                     {
-                                        printf("\nNenhum chamado cadastrado no sistema!");
+                                        printf("\nNenhuma equipe cadastrada no sistema!");
                                         break;
                                     }
 
@@ -740,10 +744,6 @@ void main()
                         case 0:
                         {
                             printf("\nVoltando ao menu anterior...\n");
-
-                            liberarMemoria();
-
-                            printf("\nTodas as listas encadeadas desalocadas.\n");
                         }break;
 
                         
@@ -771,7 +771,8 @@ void main()
             case 0:
             {
                 //Desaloca todos os ponteiros, a parte de salvamento é dentro das funções
-                liberarMemoria();
+                salvaSistema(listaBairro, listaEquipe)
+                liberarMemoria(&listaBairro, &listaEquipe);
             }break;
 
             default:

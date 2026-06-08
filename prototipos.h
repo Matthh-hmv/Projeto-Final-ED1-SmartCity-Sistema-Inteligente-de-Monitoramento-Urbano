@@ -29,7 +29,7 @@ typedef struct bairro{
 	int codigo;
 	char nome[50];
 	int quantidadeOcorrencias; //Ajuda a fazer o relatorio 1; ++
-	int totalPorSeveridade[3]; //Armazenar a quantidade de ocorrencias por severidade por bairro, relatorio 6; ++
+	int totalPorSeveridade[4]; //Armazenar a quantidade de ocorrencias por severidade por bairro, relatorio 6; ++
 	int quantidaSensores; //Ajuda a fazer o relatorio 5; ++
 	Sensor *listaSensores;
 	struct bairro *prox;
@@ -101,8 +101,12 @@ void removeSensorInicio(Bairro *enderecoBairro);
 //Ocorrências
 Ocorrencia * alocaOcorrencia(int codigo, int severidade, char descricao[], int status);
 void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codigo, int severidade, char descricao[], int status);
-void removeOcorrenciaCodigo(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codOcorrencia);
 void removeOcorrenciaInicio(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia);
 Ocorrencia * verificaOcorrencia(Ocorrencia *pauxOcorrencia, int codOcorrencia);
+Ocorrencia* verificaOcorrenciaGlobal(Bairro *pauxBairro, int codOcorrencia);
+void listaOcorrencia(Ocorrencia *enderecoOcorrencia); 
+void listaOcorrencias(Bairro *pauxBairro, int *flag); 
+
+void liberarMemoria (Bairro **listaBairro, Equipe **listaEquipe);
 
 #endif

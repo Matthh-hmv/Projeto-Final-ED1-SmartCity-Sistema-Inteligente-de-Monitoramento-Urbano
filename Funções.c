@@ -284,6 +284,21 @@ void associarEquipe(Equipe *listaEquipes, int codChamado, int codEquipe, int *fl
 	*flag = 1;
 }
 
+void removeEquipeInicio(Equipe ** listaEquipe)
+{
+	if (*listaEquipe == NULL)
+	{
+		return;
+	}
+	Equipe *pauxEquipe = *listaEquipe;
+	*listaEquipe = pauxEquipe -> prox;
+	while (pauxEquipe -> listaChamados)
+		removeChamadoInicio(&(pauxEquipe->listaChamados));
+	free(pauxEquipe);
+	pauxEquipe = NULL;
+	return;		
+}
+
 
 Chamado *alocaChamado(int cod, int priori, int statusChamado, Ocorrencia *OcorrenciaReal)
 {
@@ -338,6 +353,8 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 
 	*flag = 1;
 }
+
+
 
 
 Chamado *verificaChamado(Equipe *listaEquipes, int codChamado)
@@ -1659,19 +1676,18 @@ Ocorrencia* verificaOcorrenciaGlobal(Bairro *pauxBairro, int codOcorrencia)
         Sensor *pauxSensor = pauxBairro->listaSensores;
         while (pauxSensor != NULL)
         {
-            // Usamos a sua função original para procurar dentro DESTE sensor específico!
-            Ocorrencia *achou = verificaOcorrencia((Ocorrencia*)pauxSensor->listaOcorrencias, codOcorrencia);
-            
-            // Se encontrou a ocorrência neste sensor, retorna o endereço dela imediatamente
-            if (achou != NULL)
+
+            Ocorrencia *enderecoOcorrencia = verificaOcorrencia((Ocorrencia*)pauxSensor->listaOcorrencias, codOcorrencia);
+          
+            if (enderecoOcorrencia != NULL)
             {
-                return achou; 
+                return enderecoOcorrencia; 
             }
 
-            pauxSensor = pauxSensor->prox; // Avança para o próximo sensor
+            pauxSensor = pauxSensor->prox; 
         }
 
-        pauxBairro = pauxBairro->prox; // Avança para o próximo bairro
+        pauxBairro = pauxBairro->prox; 
     }
     
     return NULL; // Se percorreu tudo e não achou, retorna NULL

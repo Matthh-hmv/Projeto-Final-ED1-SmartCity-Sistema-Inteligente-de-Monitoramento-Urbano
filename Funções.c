@@ -335,7 +335,7 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 
 		paux->prox = novoChamado;
 	}
-	
+
 	*flag = 1;
 }
 
@@ -769,6 +769,372 @@ void registraLog(const char *operacao, const char *status, const char *dados)
 	fclose(arquivoLog);
 }
 
+
+void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
+{
+	FILE *arquivoSimulacao = fopen("entradas/entrada_simulacao.txt", "r");
+
+	if(arquivoSimulacao)
+	{
+		printf("Erro ao abrir entradas/entrada_simulacao.txt\n");
+        return;
+	}
+
+	printf("\n--- INICIANDO SIMULACAO AUTOMATICA VIA ARQUIVO ---\n");
+	char comandoSimulacao[30], dadosLog[150], nomeBairro[50], descOcorrencia[100];
+    int codBairro, codEquipe, codSensor, codOcorrencia, codChamado, tipoSensor, statusSensor, statusOcorrencia, severidade, prioridade;
+    int flagFuncoes;
+
+    while(fscanf(arquivoSimulacao, "%s", comandoSimulacao) == 1 && strcmp(comandoSimulacao, "FIM") != 0)
+    {
+    	if(strcmp(comandoSimulacao, "cadastrarBairro") == 0)
+    	{
+    		fscanf(arquivoSimulacao, "%d %s", &codBairro, nomeBairro);
+
+    		if(codBairro <= 0)
+    		{
+    			sprintf(dadosLog, "Codigo de bairro invalido");
+    			registraLog("cadastrarBairro", "FALHA", dadosLog);
+    		}
+
+    		if(verificaBairro(*listaBairro, codBairro) != NULL)
+    		{
+    			sprintf(dadosLog, "Codigo de bairro ja cadastrado");
+    			registraLog("cadastrarBairro", "FALHA", dadosLog);
+    		}
+
+    		else
+    		{
+    			insereBairro(listaBairro, codBairro, nomeBairro, &flagFuncoes);
+    			sprintf(dadosLog, "Codigo: %d, Nome: %s", codBairro, nomeBairro);
+    			registraLog("cadastrarBairro", "SUCESSO", dadosLog);
+    		}
+    	}
+
+    	if(strcmp(comandoSimulacao, "cadastrarSensor") == 0)
+    	{
+    		fscanf(arquivoSimulacao, "%d %d %d %d", &codSensor, &tipoSensor, &statusSensor, &codBairro);
+
+    		Bairro *bairroDestino = verificaBairro(*listaBairro, codBairro);
+
+    		if(bairroDestino == NULL)
+    		{
+    			sprintf(dadosLog, "Bairro %d nao existe", codBairro);
+    			registraLog("cadastrarSensor", "FALHA", dadosLog);
+    		}
+
+    		if(codSensor <= 0)
+    		{
+    			sprintf(dadosLog, "Codigo do sensor invalido");
+    			registraLog("cadastrarSensor", "FALHA", dadosLog);
+    		}
+
+    		if(tipoSensor < 1 || tipoSensor > 5)
+    		{
+    			sprintf(dadosLog, "Tipo do sensor invalido");
+    			registraLog("cadastrarSensor", "FALHA", dadosLog);
+    		}
+
+    		if(statusSensor < 1 || statusSensor > 3)
+    		{
+    			sprintf(dadosLog, "Status do sensor invalido");
+    			registraLog("cadastrarSensor", "FALHA", dadosLog);
+    		}
+
+    		if(verificaSensorGlobal(*listaBairro, codSensor) != NULL)
+    		{
+    			sprintf(dadosLog, "Sensor %d ja existe", codSensor);
+    			registraLog("cadastrarSensor", "FALHA", dadosLog);
+    		}
+
+    		else
+    		{
+    			insereSensor(*listaBairro, codBairro, codSensor, tipoSensor, statusSensor, &flagFuncoes);
+    			sprintf(dadosLog, "Cod: %d, Tipo: %d, Bairro: %d", codSensor, tipoSensor, codBairro);
+    			registraLog("cadastrarSensor", "SUCESSO", dadosLog);
+    		}
+    	}
+
+
+    	if(strcmp(comandoSimulacao, "cadastrarEquipe") == 0)
+    	{
+    		fscanf(arquivoSimulacao, "%d %s %d", &codEquipe, nomeBairro, &tipoSensor);
+
+    		if(codEquipe <= 0)
+    		{
+    			sprintf(dadosLog, "Codigo de equipe inválido");
+                registrarLog("cadastrarEquipe", "FALHA", dadosLog);
+    		}
+
+    		if(buscarEquipe(*listaEquipe, codEquipe) != NULL)
+    		{
+    			sprintf(dadosLog, "Equipe %d ja cadastrada", codEquipe);
+                registrarLog("cadastrarEquipe", "FALHA", dadosLog);
+    		}
+
+    		if(tipoSensor < 1 || tipoSensor > 5)
+    		{
+    			sprintf(dadosLog, "Especialidade invalida");
+                registrarLog("cadastrarEquipe", "FALHA", dadosLog);
+    		}
+
+    		else
+    		{
+    			Equipe *novaEquipe = alocaEquipe(codEquipe, nomeBairro, tipoSensor);
+
+    			if(novaEquipe != NULL)
+    			{
+    				inserirEquipe(listaEquipe, novaEquipe, &flagFuncoes);
+
+    				if(flagFuncoes == 1)
+    				{
+    					sprintf(dadosLog, "Codigo: %d, Nome: %s, Especialidade: %d", codEquipe, nomeBairro, tipoSensor);
+                		registrarLog("cadastrarEquipe", "SUCESSO", dadosLog);
+    				}
+
+    				else
+    				{
+    					free(novaEquipe);
+    					sprintf(dadosLog, "Erro ao inserir equipe");
+                		registrarLog("cadastrarEquipe", "FALHA", dadosLog);
+    				}
+    			}
+    		}
+    	}
+
+    	if(strcmp(comandoSimulacao, "registrarOcorrencia") == 0)
+    	{
+    		fscanf(arquivoSimulacao, "%d %d %d %d %d  %s", &codOcorrencia, &severidade, &statusOcorrencia, &codSensor, &codBairro, descOcorrencia);
+    		
+    		Bairro *enderecoBairro = verificaBairro(listaBairro, codBairro);
+
+    		if(enderecoBairro != NULL)
+    		{
+    			Sensor *enderecoSensor = verificaSensor(enderecoBairro->listaSensores, codSensor);
+
+    			if(enderecoSensor != NULL)
+    			{
+    				insereOcorrencia(enderecoBairro, &(enderecoSensor->listaOcorrencias), codOcorrencia, severidade, descOcorrencia, statusOcorrencia, &flagFuncoes);
+
+    				if(flagFuncoes == 1)
+    				{
+    					sprintf(dadosLog, "ID: %d, Sensor: %d, Gravidade: %d", codOcorrencia, codSensor, severidade);
+                        registrarLog("registrarOcorrencia", "SUCESSO", dadosLog);
+
+                        if(severidade == 4 && statusOcorrencia == 1)
+                        {
+                        	int codChamadoAutomatico = 7000 + codOcorrencia;
+
+                        	if(verificaChamado(*listaEquipe, codChamadoAutomatico) == NULL)
+                        	{
+                        		Ocorrencia *OcorrenciaReal = verificaOcorrencia(enderecoSensor->listaOcorrencias, codOcorrencia);
+                        		Chamado *novoChamado = alocaChamado(codChamadoAutomatico, 3, 1, OcorrenciaReal);
+
+                        		int flagAuto;
+                        		inserirChamadoEquipe(*listaEquipe, enderecoSensor->tipo, novoChamado, &flagAuto);
+
+                        		if(flagAuto == 1 && OcorrenciaReal != NULL)
+                        		{
+                        			OcorrenciaReal->chamado = novoChamado;
+
+                        			int flagStatus;
+                        			alteraStatusSensor(*listaBairro, codSensor, 2, &flagStatus);
+
+                        			sprintf(dadosLog, "Chamado %d gerado. Sensor %d em manutencao", codChamadoAutomatico, codSensor);
+                        			registrarLog("ChamadoAutomatico", "SUCESSO", dadosLog);
+                        		}
+
+                        		else
+                        			free(novoChamado);
+                        	}
+                        }
+    				}
+    			}
+
+    			else
+    			{
+    				sprintf(dadosLog, "Sensor %d nao localizado no bairro %d", codSensor, codBairro);
+                    registrarLog("registrarOcorrencia", "FALHA", dadosLog);
+    			}
+    		}
+
+    		else
+    		{
+    			sprintf(dadosLog, "Bairro %d nao existe", codBairro);
+            	registrarLog("registrarOcorrencia", "FALHA", dadosLog);
+    		}
+    	}
+
+    	if(strcmp(comandoSimulacao, "gerarChamado") == 0)
+    	{
+    		fscanf(arquivoSimulacao, "%d %d %d %d", &codChamado, &codOcorrencia, &prioridade, &statusSensor);
+
+    		if(verificaChamado(*listaEquipe, codChamado) != NULL)
+    		{
+    			sprintf(dadosLog, "Chamado %d ja existente", codChamado);
+                registrarLog("gerarChamado", "FALHA", dadosLog);
+    		}
+
+    		else
+    		{
+    			gerarChamado(*listaEquipe, *listaBairro, codChamado, codOcorrencia, prioridade, statusSensor, &flagFuncoes);
+
+    			if(flagFuncoes == 1)
+    			{
+    				sprintf(dadosLog, "Cod: %d, Ocorrencia: %d", codChamado, codOcorrencia);
+                	registrarLog("gerarChamado", "SUCESSO", dadosLog);
+    			}
+
+    			else
+    			{
+    				sprintf(dadosLog, "Erro ao vincular o chamado %d", codChamado);
+                	registrarLog("gerarChamado", "FALHA", dadosLog);
+    			}
+    		}
+    	}
+
+
+    	if(strcmp(comandoSimulacao, "associarEquipe") == 0)
+    	{
+    		fscanf(arquivoSimulacao, "%d %d", &codChamado, &codEquipe);
+            associarEquipe(*listaEquipe, codChamado, codEquipe, &flagFuncoes);
+
+            if(flagFuncoes == 1)
+            {
+            	sprintf(dadosLog, "Chamado: %d -> Nova Equipe: %d", codChamado, codEquipe);
+                registrarLog("associarEquipe", "SUCESSO", dadosLog);
+            }
+
+            else
+            {
+            	sprintf(dadosLog, "Nao foi possivel associar o Chamado %d a Equipe %d", codChamado, codEquipe);
+                registrarLog("associarEquipe", "FALHA", dadosLog);
+            }
+    	}
+
+
+    	if(strcmp(arquivoBairros, "alteraStatusSensor") == 0)
+    	{
+    		fscanf(arquivoSimulacao, "%d %d %d", &codSensor, &codBairro, &statusSensor);
+
+    		if(statusSensor < 1 || statusSensor > 3)
+    		{
+    			sprintf(dadosLog, "Status invalido");
+                registrarLog("alterarStatusSensor", "FALHA", dadosLog);
+    		}
+
+    		else
+    		{
+    			Sensor *sensorAlvo = verificaSensorGlobal(*listaBairro, codSensor);
+    			alteraStatusSensor(*listaBairro, codSensor, statusSensor, &flagFuncoes);
+
+    			if(flagFuncoes == 1 && sensorAlvo != NULL)
+    			{
+    				sprintf(dadosLog, "Sensor: %d, Novo Status: %d", codSensor statusSensor);
+                	registrarLog("alterarStatusSensor", "SUCESSO", dadosLog);
+
+                	if(statusSensor == 3)
+                	{
+                		int codChamadoAutomatico = 9000 + codSensor;
+                		if(verificaChamado(*listaEquipe, codChamadoAutomatico) == NULL)
+                		{
+                			Chamado *novoChamado = alocaChamado(codChamadoAutomatico, 3, 1, NULL);
+
+                			int flagAuto;
+                			inserirChamadoEquipe(*listaEquipe, sensorAlvo->tipo, novoChamado, &flagAuto);
+
+                			if(flagAuto == 1)
+                			{
+                				sprintf(dadosLog, "Chamado %d aberto por perda de sinal", codChamadoAutomatico);
+                				registrarLog("ChamadoAutomatico", "FALHA", dadosLog);
+                			}
+
+                			else
+                				free(novoChamado);
+                		}
+
+
+                	}
+    			}
+
+    			else
+    			{
+    				sprintf(dadosLog, "Sensor %d nao encontrado", codSensor);
+                	registrarLog("alterarStatusSensor", "FALHA", dadosLog);
+    			}
+    		}
+    	}
+
+    	if(strcmp(comandoSimulacao, "finalizarChamado") == 0)
+    	{
+    		scanf(arquivoSimulacao, "%d", &codChamado);
+    		finalizarChamado(*listaEquipe, codChamado, &flagFuncoes);
+
+    		if(flagFuncoes == 1)
+    		{
+    			sprintf(dadosLog, "Chamado %d finalizado", codChamado);
+                registrarLog("finalizarChamado", "SUCESSO", dadosLog);
+    		}
+
+    		else
+    		{
+    			sprintf(dadosLog, "Chamado %d nao localizado", codChamado);
+                registrarLog("finalizarChamado", "FalHA", dadosLog);
+    		}
+    	}
+
+
+    	if(strcmp(comandoSimulacao, "listaSensoresBairro") == 0)
+    	{
+    		scanf(arquivoSimulacao, "%d", &codBairro);
+
+    		Bairro *bairroAlvo = verificaBairro(*listaBairro, codBairro);
+
+    		if(bairroAlvo == NULL)
+    		{
+    			sprintf(dadosLog, "Bairro %d nao localizado", codBairro);
+                registrarLog("listarSensoresBairro", "FALHA", dadosLog);
+    		}
+
+    		else
+    		{
+    			printf("\nSensores no Bairro %d: %s \n", bairroAlvo->nome);
+    			listaSensoresPorBairro(*listaBairro, codBairro, &flagFuncoes);
+
+    			sprintf(dadosLog, "Bairro: %d, Nome: %s", codBairro, bairroAlvo->nome);
+                registrarLog("listarSensoresBairro", "SUCESSO", dadosLog);
+    		}
+    	}
+
+
+    	if(strcmp(comandoSimulacao, "listarOcorrencias") == 0)
+    	{
+    		fscanf(arquivoSimulacao, "%d", &codSensor);
+
+    		Sensor *sensorAlvo = verificaSensorGlobal(*listaBairro, codSensor);
+
+    		if(sensorAlvo == NULL)
+    		{
+    			sprintf(dadosLog, "Sensor %d nao encontrado para listar ocorrencias", codSensor);
+                registrarLog("listarOcorrencias", "FALHA", dadosLog);
+                printf("\nSensor %d nao encontrado\n", codSensor);
+    		}
+
+    		else
+    		{
+    			listarOcorrencias(sensorAlvo, &flagFuncoes);
+    			sprintf(dadosLog, "Sensor %d", codSensor);
+                registrarLog("listarOcorrencias", "SUCESSO", dadosLog);
+    		}
+    	}
+    }
+
+    registrarLog("FIM", "SUCESSO", "Arquivo de simulacao automatica chegou ao fim.");
+    fclose(arquivoSimulacao);
+
+    salvaSistema(*listaBairro, *listaEquipe);
+    printf("\nSimulcao automatica concluida com sucesso!\n");
+}
 
 
 //MATHEUS

@@ -603,7 +603,6 @@ void salvaSistema(Bairro *listaBairros, Equipe *listaEquipes)
 		printf("Erro ao atualizar entradas/chamados.txt\n");
 }
 
-
 void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 {
 	FILE *relatorio = fopen("saidas/relatorio_final.txt", "w");
@@ -756,13 +755,120 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 	}
 
 	fprintf(relatorio, "Severidade 1: %d\n", total[0]);
-	fprintf(relatorio, "Severidade 1: %d\n", total[1]);
-	fprintf(relatorio, "Severidade 1: %d\n", total[2]);
-	fprintf(relatorio, "Severidade 1: %d\n", total[3]);
+	fprintf(relatorio, "Severidade 2: %d\n", total[1]);
+	fprintf(relatorio, "Severidade 3: %d\n", total[2]);
+	fprintf(relatorio, "Severidade 4: %d\n", total[3]);
 
+	fprintf(relatorio, "\n");
+
+	//relatorio geral
+	fprintf(relatorio, "RELATORIO GERAL \n");
+
+	//sensores ativos e offline
+	pauxB = listaBairros;
+	int temSensor = 0;
+
+	while(pauxB != NULL)
+	{
+		Sensor *pauxS = pauxB->listaSensores;
+
+		while(pauxS != NULL)
+		{
+			char statusS[20];
+
+			if(pauxS->status == 1)
+				strcpy(statusS, "ATIVO");
+
+			else if(pauxS->status == 2)
+				strcpy(statusS, "MANUTENCAO");
+
+			else if(pauxS->status == 3)
+				strcpy(statusS, "OFFLINE");
+
+			else
+				strcpy(statusS, "DESCONHENCIDO");
+
+			fprintf(relatorio, "Sensor ID: %d | Tipo: %d | Bairro: %s | Status: %s \n", pauxS->codigo, pauxS->tipo, pauxB->nome, statusS);
+			
+			temSensor = 1;		
+			pauxS = pauxS->prox;
+		}
+		pauxB = pauxB->prox;
+	}
+
+	if(!temSensor)
+		fprintf(relatorio, "Nenhum sensor implantado \n");
+
+	fprintf(relatorio, "\n");
+
+
+	//ocorrencias registradas
+	pauxB = listaBairros;
+	int temOcorrencia = 0;
+
+	while(pauxB != NULL)
+	{
+		Sensor *pauxS = pauxB->listaSensores;
+
+		while(pauxS != NULL)
+		{
+			Ocorrencia *pauxO = pauxS->listaOcorrencias;
+
+			while(pauxO != NULL)
+			{
+				fprintf(relatorio, "Ocorrencia: %d | Gravidade: %d | Status: %d | Descricao: %s\n", pauxO->codigo, pauxO->severidade, pauxO->status, pauxO->descricao);
+				temOcorrencia = 1;
+				
+				pauxO = pauxO->prox;
+			}
+			pauxS = pauxS->prox;
+		}
+		pauxB = pauxB->prox;
+	}
+
+	if(!temOcorrencia)
+			fprintf(relatorio, "Nenhuma ocorrencia registrada");
+
+	fprintf(relatorio, "\n");
+
+
+	//bairros monitorados
+	pauxB = listaBairros;
+
+	if(pauxB == NULL)
+		fprintf(relatorio, "Nenhum bairro cadastrado");
+	
+	else
+	{
+		while(pauxB != NULL)
+		{
+			fprintf(relatorio, "Bairro: %s | Cod: %d\n", pauxB->nome, pauxB->codigo);
+			pauxB = pauxB->prox;
+		}
+	}		
+
+	fprintf(relatorio, "\n");
+
+
+	//equipes e atendimentos
+	pauxE = listaEquipes;
+
+	if(pauxE == NULL)
+		fprintf(relatorio, "Nenhuma equipe tecnica cadastrada");
+
+	else
+	{
+		while(pauxE != NULL)
+		{
+			fprintf(relatorio, "Equipe: %s | Cod: %d | Especialidade: %d | Atendimentos concluidos: %d\n", pauxE->nome, pauxE->codigo, pauxE->especialidade, pauxE->totalAtendimentos);
+			
+			pauxE = pauxE->prox;
+		}
+	}
 	fclose(relatorio);
 	printf("Arquivo relatorio.txt gerado com sucesso!  \n");
 }
+
 
 
 void registraLog(const char *operacao, const char *status, const char *dados)

@@ -56,7 +56,7 @@ typedef struct equipe{
 void carregarBairros(Bairro **listaBairros);
 void carregarChamados(Bairro *listaBairros, Equipe *listaEquipes);
 void carregarEquipes(Equipe **listaEquipes);
-void carregarOcorrencias(Bairro *listaBairros);
+void carregarOcorrencias(Bairro **listaBairros);
 void carregarSensores(Bairro *listaBairros);
 
 void salvaSistema(Bairro *listaBairros, Equipe *listaEquipes); //melhor que fazer em cada funcao de inserir, usa na main toda vez que chamar uma funcao
@@ -82,27 +82,27 @@ void removeChamadoInicio(Chamado **listaChamado);
 
 
 //Bairro
-/**/Bairro * alocaBairro(int codigo, char nome[]);
-/**/void insereBairro(Bairro **listaBairro, int codigo, char nome[], int *flag);
-/**/void funListaBairro(Bairro *pauxBairro);
-/**/void removeBairroCodigo(Bairro **listaBairro, int codBairro, int *flag);
-/**/void removeBairroInicio(Bairro **listaBairro); //Usar para a desolacação de memória
-/**/Bairro * verificaBairro(Bairro *pauxBairro, int codBairro);
-/**/int verificaBairroNome(Bairro *pauxBairro, char nomeBairro[]);//Usado para nao criar dois bairros com o mesmo nome
+Bairro * alocaBairro(int codigo, char nome[]);
+void insereBairro(Bairro **listaBairro, int codigo, char nome[], int *flag);
+void funListaBairro(Bairro *pauxBairro);
+void removeBairroCodigo(Bairro **listaBairro, int codBairro, int *flag);
+void removeBairroInicio(Bairro **listaBairro); //Usar para a desolacação de memória
+Bairro * verificaBairro(Bairro *pauxBairro, int codBairro);
+int verificaBairroNome(Bairro *pauxBairro, char nomeBairro[]);//Usado para nao criar dois bairros com o mesmo nome
 
 //Sensores
-/**/Sensor * alocaSensor(int codigo, int tipo,  int status);
-/**/void insereSensor(Bairro *pauxBairro, int codBairro, int codSensor, int tipo,  int status,int *flag);
-/**/void removeSensorInicio(Bairro *enderecoBairro);
-/**/Sensor * verificaSensor (Sensor *pauxSensor, int codSensor);
-/**/Sensor* verificaSensorGlobal(Bairro *pauxBairro, int codSensor);
-/**/void alteraStatusSensor(Bairro *listaBairros, int codSensor, int novoStatus, int *flag);
-/**/void listaSensor(Sensor *enderecoSensor);
-/**/void listaSensoresPorBairro(Bairro *listaBairro, int codBairro, int *flag);
+Sensor * alocaSensor(int codigo, int tipo,  int status);
+void insereSensor(Bairro *pauxBairro, int codBairro, int codSensor, int tipo,  int status,int *flag);
+void removeSensorInicio(Bairro *enderecoBairro);
+Sensor * verificaSensor (Sensor *pauxSensor, int codSensor);
+Sensor* verificaSensorGlobal(Bairro *pauxBairro, int codSensor);
+void alteraStatusSensor(Bairro *listaBairros, int codSensor, int novoStatus, int *flag);
+void listaSensor(Sensor *enderecoSensor);
+void listaSensoresPorBairro(Bairro *listaBairro, int codBairro, int *flag);
 
 //Ocorrências
 Ocorrencia * alocaOcorrencia(int codigo, int severidade, char descricao[], int status);
-void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codigo, int severidade, char descricao[], int status, int *flag);
+void insereOcorrencia(Bairro **ListaBairro, int codBairro, Ocorrencia **listaOcorrencia, int codigo, int severidade, char descricao[], int status, int *flag);
 void removeOcorrenciaInicio(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia);
 Ocorrencia * verificaOcorrencia(Ocorrencia *pauxOcorrencia, int codOcorrencia);
 Ocorrencia* verificaOcorrenciaGlobal(Bairro *pauxBairro, int codOcorrencia);

@@ -32,7 +32,7 @@ void main()
                     carregarEquipes(&listaEquipe);
 
                     carregarSensores(listaBairro);
-                    carregarOcorrencias(listaBairro);
+                    carregarOcorrencias(&listaBairro);
                     carregarChamados(listaBairro, listaEquipe);
                     printf("\nArquivos Carregados!\n");
                     flagCarregarArquivos = 1;
@@ -426,6 +426,11 @@ void main()
 
                             printf("\nDigite o codigo da ocorrencia: ");
                             scanf("%d", &codOcorrencia);
+                            if (verificaOcorrenciaGlobal(listaBairro, codOcorrencia))
+                            {
+                                printf("\nJa existe uma ocorrencia com esse codigo!");
+                                break;
+                            }
 
                             do {
                                 printf("\n1 - Baixa \n2 - Media \n3 - Alta \n4 - Critica \nDigite a severidade: ");
@@ -437,13 +442,10 @@ void main()
                             fgets(descOcorrencia, 100, stdin);
                             descOcorrencia[strcspn(descOcorrencia, "\n")] = '\0';
 
-                            do{
-                            printf("\n1 - Ativa \n0 - Resolvida \nDigite o status: ");
-                            scanf("%d", &statusOcorrencia);
-                            } while (statusOcorrencia < 0 || statusOcorrencia > 1);
+                            statusOcorrencia = 1; //Vai ser 1 por a ocorrencia foi registrada e ficara em aberto, mudando conforme chamado
 
-                            insereOcorrencia(enderecoBairro, &(enderecoSensor->listaOcorrencias), codOcorrencia, severidade, descOcorrencia, statusOcorrencia, &flagFuncoes);
-                            
+                            insereOcorrencia(&listaBairro, codBairro, &(enderecoSensor->listaOcorrencias), codOcorrencia, severidade, descOcorrencia, statusOcorrencia, &flagFuncoes);
+                            enderecoBairro = NULL;
 
                             if(flagFuncoes == 1)
                             {
@@ -528,11 +530,11 @@ void main()
                                     }while(codOcorrencia <= 0);
 
                                     do{
-                                        printf("\nDigite a prioridade do chamado (1 a 3): ");
+                                        printf("\nDigite a prioridade do chamado (1 a 4): ");
                                         scanf("%d", &prioridade);
                                         getchar();
                                     
-                                    }while(prioridade < 1 || prioridade > 3);
+                                    }while(prioridade < 1 || prioridade > 4);
 
                                     do{
                                         printf("\nDigite o status do sensor correspondente (1 a 3): ");
@@ -669,8 +671,18 @@ void main()
 
                                     else
                                     {
+                                        char nomeEspecialidade[30];
+
+                                        switch (achouEqp->especialidade) 
+                                        {
+                                            case 1: strcpy(nomeEspecialidade, "Temperatura"); break;
+                                            case 2: strcpy(nomeEspecialidade, "Enchente"); break;
+                                            case 3: strcpy(nomeEspecialidade, "Fumaca"); break;
+                                            case 4: strcpy(nomeEspecialidade, "Transito"); break;     
+                                            case 5: strcpy(nomeEspecialidade, "Iluminacao Publica"); break;                                 
+                                        }
                                         printf("\nEquipe: %s | Codigo: %d", achouEqp->nome, achouEqp->codigo);
-/*Transformar em char*/                 printf("\nEspecialidade: %d", achouEqp->especialidade);
+                                        printf("\nEspecialidade: %s", nomeEspecialidade);
                                         printf("\nTotal de atendimentos concluidos: %d", achouEqp->totalAtendimentos);
                                     }
                                 }break;
@@ -737,8 +749,7 @@ void main()
                     printf("\nCarregue os dados (opcao 1) antes! ");
                     break;
                 }    
-                
-                //Aqui onde ele vai ler o arquivo entrada_simulacao.txt e realizar as ações
+                                
                 executarSimulacao(&listaBairro, &listaEquipe);                
             }break;
 
@@ -747,6 +758,7 @@ void main()
                 //Desaloca todos os ponteiros, a parte de salvamento é dentro das funções
                 if (flagCarregarArquivos == 1)
                     salvaSistema(listaBairro, listaEquipe);
+                gerarRelatorio(listaBairro, listaEquipe);
                 liberarMemoria(&listaBairro, &listaEquipe);
             }break; 
 

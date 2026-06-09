@@ -84,7 +84,7 @@ void carregarEquipes(Equipe **listaEquipes)
 }
 
 
-void carregarOcorrencias(Bairro *listaBairros)
+void carregarOcorrencias(Bairro **listaBairros)
 {
 	FILE *arquivoOcorrencias = fopen("entradas/ocorrencias.txt", "r");
 
@@ -99,20 +99,20 @@ void carregarOcorrencias(Bairro *listaBairros)
 
 	while(fscanf(arquivoOcorrencias, "%d %d %d %d %d %s", &codOcorrencia, &sev, &statusSensor, &codSensor, &bairro, desc) == 6)
 	{
-		Bairro *bairroDestino = verificaBairro(listaBairros, bairro);
+		Bairro *bairroDestino = verificaBairro(*listaBairros, bairro);
 
 		if(bairroDestino != NULL)
 		{
 			Sensor *pauxSensor = verificaSensor(bairroDestino->listaSensores, codSensor); //busca o sensor no bairro informado
 
 			if(pauxSensor != NULL)  
-				insereOcorrencia(bairroDestino, &(pauxSensor->listaOcorrencias), codOcorrencia, sev, desc, statusSensor, &flagAux);
+				insereOcorrencia(listaBairros, bairro, &(pauxSensor->listaOcorrencias), codOcorrencia, sev, desc, statusSensor, &flagAux);
 
 
 
-			if(pauxSensor == NULL)  // nao achou no bairro informado, procura em outro bairro
+			else if(pauxSensor == NULL)  // nao achou no bairro informado, procura em outro bairro
 			{
-				Bairro *pauxBairro = listaBairros;
+				Bairro *pauxBairro = *listaBairros;
 
 				while(pauxBairro != NULL && pauxSensor == NULL)
 				{
@@ -181,7 +181,14 @@ Equipe *alocaEquipe(int codEquipe, char *nomeEquipe, int espec)
 
 void inserirEquipe(Equipe **listaEquipes, Equipe *novaEquipe, int *flag)
 {
-
+	if (buscarEquipe(*listaEquipes, novaEquipe -> codigo))
+	{
+		printf("\nErro: Equipe com mesmo codigo ja cadastrada!");
+		*flag = 0;
+		free(novaEquipe);
+		return;
+	}
+	
 	if(novaEquipe == NULL)
 	{
 		*flag = 0;
@@ -352,7 +359,7 @@ void inserirChamadoEquipe(Equipe *listaEquipes, int codEquipe, Chamado *novoCham
 
 		paux->prox = novoChamado;
 	}
-
+ 	novoChamado -> status = 2;
 	*flag = 1;
 }
 
@@ -446,12 +453,17 @@ void gerarChamado(Equipe *listaEquipes, Bairro *listaBairros, int codChamado, in
 	{
 		OcorrenciaReal->chamado = novoChamado;
 
+
 		printf("Chamado %d gerado automaticamente e atribuido a equipe %s \n", codChamado, equipeCompativel->nome);
+		novoChamado -> status = 2;
+		OcorrenciaReal -> status = 2;
 		*flag = 1;
 	}
 
 	else
 	{
+		novoChamado -> status = 1;
+		OcorrenciaReal -> status = 1;
 		printf("Nao foi possivel inserir o chamadado na equipe\n");
 		*flag = 0;
 	}
@@ -492,7 +504,7 @@ void finalizarChamado(Equipe *listaEquipes, int codChamado, int *flag)
 	equipeResponsavel->totalAtendimentos++;
 
 	if(chamadoAlvo->ocorrencia != NULL)
-		chamadoAlvo->ocorrencia->status = 0; //ocorrencia resovlida
+		chamadoAlvo->ocorrencia->status = 3; //ocorrencia resovlida
 
 	printf("Chamado %d finalizado com sucesso! \n", codChamado);
 	*flag = 1;
@@ -506,9 +518,12 @@ void removeChamadoInicio(Chamado **listaChamado)
 	}
 	Chamado *pauxChamado = *listaChamado;
 	*listaChamado = pauxChamado -> prox;
-	Ocorrencia *pauxOcorrencia = pauxChamado -> ocorrencia;
-	if (pauxOcorrencia -> chamado)
-		pauxOcorrencia -> chamado = NULL;
+	if (pauxChamado ->  ocorrencia)
+		{
+		Ocorrencia *pauxOcorrencia = pauxChamado -> ocorrencia;
+		if (pauxOcorrencia -> chamado)
+			pauxOcorrencia -> chamado = NULL;
+		}
 	free(pauxChamado);
 	return;	
 }
@@ -527,7 +542,6 @@ void salvaSistema(Bairro *listaBairros, Equipe *listaEquipes)
 			fprintf(arquivoBairros, "%d %s\n", pauxB->codigo, pauxB->nome);
 			pauxB = pauxB->prox;
 		}
-		printf("\nTeste");
 		fclose(arquivoBairros);
 	}
 	else
@@ -760,7 +774,7 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 	{
 		while(pauxB != NULL)
 		{
-			fprintf(relatorio, "Bairro: %s | Quantidade de sensores: %d", pauxB->nome, pauxB->quantidadeSensores);
+			fprintf(relatorio, "Bairro: %s | Quantidade de sensores: %d\n", pauxB->nome, pauxB->quantidadeSensores);
 			pauxB = pauxB->prox;
 		}
 	}
@@ -788,10 +802,10 @@ void gerarRelatorio(Bairro *listaBairros, Equipe *listaEquipes)
 	fprintf(relatorio, "Severidade 3: %d\n", total[2]);
 	fprintf(relatorio, "Severidade 4: %d\n", total[3]);
 
-	fprintf(relatorio, "\n");
+	fprintf(relatorio, "\n\n");
 
 	//relatorio geral
-	fprintf(relatorio, "RELATORIO GERAL \n");
+	fprintf(relatorio, "--- RELATORIO GERAL ---\n");
 
 	//sensores ativos e offline
 	pauxB = listaBairros;
@@ -1043,7 +1057,6 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
 
     				else
     				{
-    					free(novaEquipe);
     					sprintf(dadosLog, "Erro ao inserir equipe");
                 		registraLog("cadastrarEquipe", "FALHA", dadosLog);
     				}
@@ -1063,7 +1076,7 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
 
     			if(enderecoSensor != NULL)
     			{
-    				insereOcorrencia(enderecoBairro, &(enderecoSensor->listaOcorrencias), codOcorrencia, severidade, descOcorrencia, statusOcorrencia, &flagFuncoes);
+    				insereOcorrencia(listaBairro, codBairro, &(enderecoSensor->listaOcorrencias), codOcorrencia, severidade, descOcorrencia, statusOcorrencia, &flagFuncoes);
 
     				if(flagFuncoes == 1)
     				{
@@ -1194,9 +1207,6 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
                 				sprintf(dadosLog, "Chamado %d aberto por perda de sinal", codChamadoAutomatico);
                 				registraLog("ChamadoAutomatico", "FALHA", dadosLog);
                 			}
-
-                			//else
-                			//	free(novoChamado);
                 		}
 
 
@@ -1264,7 +1274,7 @@ void executarSimulacao(Bairro **listaBairro, Equipe **listaEquipe)
     registraLog("FIM", "SUCESSO", "Arquivo de simulacao automatica chegou ao fim.");
     fclose(arquivoSimulacao);
 
-    salvaSistema(*listaBairro, *listaEquipe);
+    //salvaSistema(*listaBairro, *listaEquipe);
     printf("\nSimulcao automatica concluida com sucesso!\n");
 }
 
@@ -1384,7 +1394,7 @@ void removeBairroInicio(Bairro **listaBairro)
 	return;		
 } //Usado para desalocacao final, nao precisa remover dos arquivos
 
-Bairro * verificaBairro(Bairro *pauxBairro, int codBairro) //Verifica se o bairro existe na lista, se sim retorna 1, se nao retorna 0
+Bairro * verificaBairro(Bairro *pauxBairro, int codBairro) //Verifica se o bairro existe na lista, se sim retorna o endereco, se nao retorna NULL
 {
 	while (pauxBairro != NULL) //Percorre os bairros
 	{
@@ -1442,7 +1452,7 @@ Sensor * alocaSensor(int codigo, int tipo,  int status)
 	return novo;
 }
 
-void insereSensor(Bairro *listaBairro, int codBairro, int codSensor, int tipo,  int status, int *flag)//fazer verificacao do endereco do bairro na main
+void insereSensor(Bairro *listaBairro, int codBairro, int codSensor, int tipo,  int status, int *flag)
 {
 	Bairro * enderecoBairro = verificaBairro(listaBairro, codBairro);
 	if(enderecoBairro == NULL)
@@ -1603,8 +1613,14 @@ Ocorrencia * alocaOcorrencia(int codigo, int severidade, char descricao[], int s
 	return novo;
 }
 
-void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int codigo, int severidade, char descricao[], int status, int *flag) //O ponteiro listaOcorrencia deve ser do sensor a ser inserido, passar pela main;
+void insereOcorrencia(Bairro **listaBairro, int codBairro, Ocorrencia **listaOcorrencia, int codigo, int severidade, char descricao[], int status, int *flag) //
 {
+	if (verificaOcorrenciaGlobal(*listaBairro, codigo))
+	{
+		*flag = 0;
+		return;
+	}
+	Bairro *enderecoBairro = verificaBairro(*listaBairro, codBairro);
 	Ocorrencia *novo = alocaOcorrencia(codigo, severidade, descricao, status);
 	if (novo == NULL)
 	{	
@@ -1631,7 +1647,7 @@ void insereOcorrencia(Bairro *enderecoBairro, Ocorrencia **listaOcorrencia, int 
 	pauxOcorrencia -> prox = novo;
 	*flag = 1;
 	return;
-} //Lembrar de verificar se o bairro existe na main, aí não terá como cadastrar em NULL
+} 
 
 
 
@@ -1699,7 +1715,6 @@ void listaOcorrencia(Ocorrencia *enderecoOcorrencia)
 {
     char severidadeChar[20];
     
-    // Traduz a severidade (Exemplo: 1 - Baixa, 2 - Média, 3 - Alta)
     switch(enderecoOcorrencia->severidade)
     {
         case 1: strcpy(severidadeChar, "Baixa"); break;
@@ -1749,10 +1764,10 @@ void listaOcorrencias(Bairro *pauxBairro, int *flag)
 		
 void liberarMemoria (Bairro **listaBairro, Equipe **listaEquipe)
 {
-	while(*listaBairro)
-		removeBairroInicio(listaBairro);
 	while(*listaEquipe)
 		removeEquipeInicio(listaEquipe);
+	while(*listaBairro)
+		removeBairroInicio(listaBairro);
 	return;
 
 }
